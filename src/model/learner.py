@@ -15,8 +15,9 @@ class Learner(pl.LightningModule):
         return y_hat, y
     
     def label_processor(self, y):
+        # This is a placeholder function, such that it works with the dummy network!!!
         y = y.float()
-        y = y[:, :, :, 0]
+        y = y[:, :, :, 0]  # Only select the first slice, similar to the dummy network
         y_downsampled = torch.nn.functional.avg_pool2d(y, kernel_size = 2*7, stride = 2**7).view(-1, 16)
         return y_downsampled
 
@@ -30,6 +31,7 @@ class Learner(pl.LightningModule):
 
         # Metrics
         acc = (y_hat.argmax(dim=1) == y).float().mean()
+        # more metrics to come ...
 
         # Log
         self.log(f"{mode}_loss", loss, prog_bar=True)
