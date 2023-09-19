@@ -2,7 +2,7 @@ from torch.utils.data import Dataset, DataLoader
 import lightning.pytorch as pl
 from torchvision.transforms import ToTensor
 
-from src.data.dataloader import CustomImageDataset
+from src.data.dataset import CustomImageDataset
 
 class DataModule(pl.LightningDataModule):
     def __init__(self, dir, batch_size = 1, num_workers = 0):
