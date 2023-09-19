@@ -131,3 +131,4 @@ dmypy.json
 
 # our own stuff
 data_dev/*
+data_dev.zip
