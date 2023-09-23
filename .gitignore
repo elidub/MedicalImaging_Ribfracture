@@ -133,3 +133,4 @@ dmypy.json
 data_dev/*
 data_dev.zip
 logs/test
+.DS_Store
