@@ -22,7 +22,7 @@ class DummyNetwork(nn.Module):
 
 
 class ConvDownBlock(nn.Module):
-    def __init__(self, in_channels, out_channels, bottleneck=False):
+    def __init__(self, in_channels, out_channels):
         super(ConvDownBlock, self).__init__()
 
         self.conv1 = nn.Conv3d(
@@ -48,6 +48,55 @@ class ConvDownBlock(nn.Module):
         y = self.norm1(self.conv1(x)).relu()
         y = self.norm2(self.conv2(y)).relu()
         return self.maxpool(y)
+
+
+class ResConvDownBlock(nn.Module):
+    def __init__(self, in_channels, out_channels, stride=1):
+        super(ResConvDownBlock, self).__init__()
+
+        self.conv1 = nn.Conv3d(
+            in_channels=in_channels,
+            out_channels=out_channels,
+            kernel_size=(3, 3, 3),
+            stride=stride,
+            padding=1,
+            bias=False,
+        )
+
+        self.conv2 = nn.Conv3d(
+            in_channels=out_channels,
+            out_channels=out_channels,
+            kernel_size=(3, 3, 3),
+            padding=1,
+            bias=False,
+        )
+
+        self.norm1 = nn.BatchNorm3d(out_channels)
+        self.norm2 = nn.BatchNorm3d(out_channels)
+
+        self.downsample = None
+
+        if stride != 1:
+            self.downsample = nn.Sequential(
+                nn.Conv3d(
+                    in_channels,
+                    out_channels,
+                    kernel_size=(1, 1, 1),
+                    stride=stride,
+                    bias=False,
+                ),
+                nn.BatchNorm3d(out_channels),
+            )
+
+    def forward(self, x):
+        residual = x
+        y = self.norm1(self.conv1(x)).relu()
+        y = self.norm2(self.conv2(y)).relu()
+
+        if self.downsample != None:
+            residual = self.downsample(x)
+
+        return (y + residual).relu()
 
 
 class ConvUpBlock(nn.Module):
@@ -112,3 +161,38 @@ class UNet3D(nn.Module):
         y = self.up_block3(y)
         y = self.up_block2(y)
         return self.up_block1(y)
+
+
+class ResNet183D(nn.Module):
+    def __init__(
+        self,
+        in_channels,
+    ):
+        super(ResNet183D, self).__init__()
+
+        self.conv = nn.Conv3d(
+            in_channels, 64, kernel_size=(3, 3, 3), stride=1, padding=1
+        )
+        self.norm = nn.BatchNorm3d(64)
+
+        self.layer1 = self._build_layer(64, 64, num_blocks=2, stride=1)
+        self.layer2 = self._build_layer(64, 128, num_blocks=2, stride=2)
+        self.layer3 = self._build_layer(128, 256, num_blocks=2, stride=2)
+        self.layer4 = self._build_layer(256, 512, num_blocks=2, stride=2)
+
+    def _build_layer(self, in_channels, out_channels, num_blocks=2, stride=1):
+        blocks = [ResConvDownBlock(in_channels, out_channels, stride=stride)]
+
+        for i in range(1, num_blocks):
+            blocks.append(ResConvDownBlock(out_channels, out_channels))
+
+        return nn.Sequential(*blocks)
+
+    def forward(self, x):
+        y0 = self.norm(self.conv(x)).relu()
+        y1 = self.layer1(y0)
+        y2 = self.layer2(y1)
+        y3 = self.layer3(y2)
+        y4 = self.layer4(y3)
+
+        return y2, y3, y4
