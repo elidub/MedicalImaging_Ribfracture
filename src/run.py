@@ -5,6 +5,7 @@ import torch
 sys.path.insert(1, sys.path[0] + '/..')
 from src.data.datamodule import DataModule
 from src.model.setup import setup_model
+from src.misc.utils import set_seed_and_precision
 
 def parse_option(notebook = False):
     parser = argparse.ArgumentParser(description="RibFrac")
@@ -28,8 +29,8 @@ def parse_option(notebook = False):
     return args
 
 def main(args):
-    pl.seed_everything(args.seed, workers=True)
-    torch.set_float32_matmul_precision('medium')
+    set_seed_and_precision(args)
+
 
     datamodule = DataModule(dir = '../data_dev', num_workers=args.num_workers, batch_size=args.batch_size)
     model = setup_model(net = args.net)
@@ -42,7 +43,7 @@ def main(args):
         callbacks = [
                 pl.callbacks.TQDMProgressBar(refresh_rate = 1000)
                 ],
-        deterministic = True,
+        deterministic = False, # Set to False for max_pool3d_with_indices_backward_cuda
     )
 
     trainer.fit(model,  datamodule=datamodule)

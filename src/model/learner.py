@@ -13,8 +13,9 @@ class Learner(pl.LightningModule):
         self.loss_fn = nn.CrossEntropyLoss()
 
     def forward(self, batch):
-        l = 112
+        l = 256
         x, y = batch
+        print('Croping images to size', l)
         x, y = crop(x, l = l), crop(y, l = l)
         x, y = x.float(), y.float()
         y_hat = self.net(x)
