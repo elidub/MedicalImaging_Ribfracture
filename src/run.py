@@ -11,7 +11,7 @@ def parse_option(notebook = False):
 
     # Training 
     parser.add_argument('--max_epochs', type=int, default=3, help='Max number of training epochs')
-    parser.add_argument('--num_workers', type=int, default=0, help='Number of workers for dataloader')
+    parser.add_argument('--num_workers', type=int, default=3, help='Number of workers for dataloader')
     parser.add_argument('--batch_size', type=int, default=1, help='Batch size')
 
     # Logging
@@ -26,6 +26,7 @@ def parse_option(notebook = False):
 
 def main(args):
     pl.seed_everything(args.seed, workers=True)
+    torch.set_float32_matmul_precision('medium')
 
     datamodule = DataModule(dir = '../data_dev', num_workers=args.num_workers, batch_size=args.batch_size)
     model = setup_model()
