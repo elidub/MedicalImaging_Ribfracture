@@ -23,7 +23,7 @@ class DummyNetwork(nn.Module):
 
 class ConvDownBlock(nn.Module):
     def __init__(self, in_channels, out_channels):
-        super(ConvDownBlock, self).__init__()
+        super().__init__()
 
         self.conv1 = nn.Conv3d(
             in_channels=in_channels,
@@ -52,7 +52,7 @@ class ConvDownBlock(nn.Module):
 
 class ResConvDownBlock(nn.Module):
     def __init__(self, in_channels, out_channels, stride=1):
-        super(ResConvDownBlock, self).__init__()
+        super().__init__()
 
         self.conv1 = nn.Conv3d(
             in_channels=in_channels,
@@ -101,7 +101,7 @@ class ResConvDownBlock(nn.Module):
 
 class ConvUpBlock(nn.Module):
     def __init__(self, in_channels, out_channels):
-        super(ConvUpBlock, self).__init__()
+        super().__init__()
 
         self.deconv = nn.ConvTranspose3d(
             in_channels=in_channels,
@@ -139,7 +139,7 @@ class UNet3D(nn.Module):
         in_channels,
         out_channels,
     ):
-        super(UNet3D, self).__init__()
+        super().__init__()
 
         self.down_block1 = ConvDownBlock(in_channels, 32)
         self.down_block2 = ConvDownBlock(32, 64)
@@ -161,6 +161,7 @@ class UNet3D(nn.Module):
         y = self.up_block3(y)
         y = self.up_block2(y)
         return self.up_block1(y)
+    
 
 
 class ResNet183D(nn.Module):

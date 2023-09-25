@@ -1,6 +1,10 @@
 import lightning.pytorch as pl
 import torch
 from torch import nn
+import sys
+
+sys.path.insert(1, sys.path[0] + '/..')
+from src.data.utils import crop
 
 class Learner(pl.LightningModule):
     def __init__(self, net):
@@ -9,18 +13,14 @@ class Learner(pl.LightningModule):
         self.loss_fn = nn.CrossEntropyLoss()
 
     def forward(self, batch):
+        l = 112
         x, y = batch
+        x, y = crop(x, l = l), crop(y, l = l)
+        x, y = x.float(), y.float()
         y_hat = self.net(x)
-        y = self.label_processor(y)
+        # y = self.label_processor(y)
         return y_hat, y
     
-    def label_processor(self, y):
-        # This is a placeholder function, such that it works with the dummy network!!!
-        y = y.float()
-        y = y[:, :, :, 0]  # Only select the first slice, similar to the dummy network
-        y_downsampled = torch.nn.functional.avg_pool2d(y, kernel_size = 2*7, stride = 2**7).view(-1, 16)
-        return y_downsampled
-
     def step(self, batch, mode = 'train'):
 
         # Forward pass
@@ -31,7 +31,7 @@ class Learner(pl.LightningModule):
 
         # Metrics
         acc = (y_hat.argmax(dim=1) == y).float().mean()
-        # more metrics to come ...
+        # better metrics to come ...
 
         # Log
         self.log(f"{mode}_loss", loss, prog_bar=True)
