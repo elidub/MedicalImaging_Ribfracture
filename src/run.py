@@ -9,6 +9,9 @@ from src.model.setup import setup_model
 def parse_option(notebook = False):
     parser = argparse.ArgumentParser(description="RibFrac")
 
+    # Model
+    parser.add_argument('--net', type=str, default='unet3d', help='Network architecture')
+
     # Training 
     parser.add_argument('--max_epochs', type=int, default=3, help='Max number of training epochs')
     parser.add_argument('--num_workers', type=int, default=0, help='Number of workers for dataloader')
@@ -28,7 +31,7 @@ def main(args):
     pl.seed_everything(args.seed, workers=True)
 
     datamodule = DataModule(dir = '../data_dev', num_workers=args.num_workers, batch_size=args.batch_size)
-    model = setup_model()
+    model = setup_model(net = args.net)
 
     trainer = pl.Trainer(
         logger = pl.loggers.TensorBoardLogger('../logs', name = 'test', version = args.version),
