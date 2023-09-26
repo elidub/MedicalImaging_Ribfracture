@@ -161,7 +161,6 @@ class UNet3D(nn.Module):
         y = self.up_block3(y)
         y = self.up_block2(y)
         return self.up_block1(y)
-    
 
 
 class ResNet183D(nn.Module):
@@ -197,3 +196,75 @@ class ResNet183D(nn.Module):
         y4 = self.layer4(y3)
 
         return y2, y3, y4
+
+
+class PyramidFeatures3D(nn.Module):
+    def __init__(self, c3_size, c4_size, c5_size, feature_size=256):
+        super().__init__()
+
+        # Upsample C5 to get P5
+        self.p5_conv1 = nn.Conv3d(c5_size, feature_size, 1, stride=1, padding=0)
+        self.p5_upsample = nn.Upsample(scale_factor=2, mode="nearest")
+        self.p5_conv2 = nn.Conv3d(feature_size, feature_size, 3, stride=1, padding=1)
+
+        # Upsample C4 and add P5 to get P4
+        self.p4_conv1 = nn.Conv3d(c4_size, feature_size, 1, stride=1, padding=0)
+        self.p4_upsample = nn.Upsample(scale_factor=2, mode="nearest")
+        self.p4_conv2 = nn.Conv3d(feature_size, feature_size, 3, stride=1, padding=1)
+
+        # Upsample C3 and add P4 to get P3
+        self.p3_conv1 = nn.Conv3d(c3_size, feature_size, 1, stride=1, padding=0)
+        self.p3_conv2 = nn.Conv3d(feature_size, feature_size, 3, stride=1, padding=1)
+
+        self.p6_conv = nn.Conv3d(c5_size, feature_size, 3, stride=2, padding=1)
+        self.p7_conv = nn.Conv3d(feature_size, feature_size, 3, stride=2, padding=1)
+
+    def forward(self, c3, c4, c5):
+        p5 = self.p5_conv1(c5)
+        p5_u = self.p5_upsample(p5)
+        p5 = self.p5_conv2(p5)
+
+        p4 = self.p4_conv1(c4) + p5_u
+        p4_u = self.p4_upsample(p4)
+        p4 = self.p4_conv2(p4_u)
+
+        p3 = self.p3_conv1(c3) + p4_u
+        p3 = self.p3_conv2(p3)
+
+        p6 = self.p6_conv(c5)
+        p7 = self.p7_conv(p6.relu())
+
+        return p3, p4, p5, p6, p7
+
+
+class RegressionBlock3D(nn.Module):
+    def __init__(self, in_channels, out_channels=256, num_anchors=9):
+        super().__init__()
+
+        self.conv1 = nn.Conv3d(
+            in_channels, out_channels, kernel_size=3, stride=1, padding=1
+        )
+        self.conv2 = nn.Conv3d(
+            out_channels, out_channels, kernel_size=3, stride=1, padding=1
+        )
+        self.conv3 = nn.Conv3d(
+            out_channels, out_channels, kernel_size=3, stride=1, padding=1
+        )
+        self.conv4 = nn.Conv3d(
+            out_channels, out_channels, kernel_size=3, stride=1, padding=1
+        )
+        self.conv5 = nn.Conv3d(
+            out_channels, num_anchors * 6, kernel_size=3, stride=1, padding=1
+        )
+
+    def forward(self, x):
+        y = self.conv1(x).relu()
+        y = self.conv2(y).relu()
+        y = self.conv3(y).relu()
+        y = self.conv4(y).relu()
+        y = self.conv5(y).relu()
+
+        y = y.permute(0, 2, 3, 4, 1)
+
+        return y.contiguous().view(y.shape[0], -1, 6)
+
