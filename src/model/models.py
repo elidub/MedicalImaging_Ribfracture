@@ -171,10 +171,9 @@ class ResNet183D(nn.Module):
     ):
         super(ResNet183D, self).__init__()
 
-        self.conv = nn.Conv3d(
-            in_channels, 64, kernel_size=(3, 3, 3), stride=1, padding=1
-        )
+        self.conv = nn.Conv3d(in_channels, 64, kernel_size=7, stride=1, padding=3)
         self.norm = nn.BatchNorm3d(64)
+        self.maxpool = nn.MaxPool3d(kernel_size=3, stride=2, padding=1)
 
         self.layer1 = self._build_layer(64, 64, num_blocks=2, stride=1)
         self.layer2 = self._build_layer(64, 128, num_blocks=2, stride=2)
@@ -190,7 +189,7 @@ class ResNet183D(nn.Module):
         return nn.Sequential(*blocks)
 
     def forward(self, x):
-        y0 = self.norm(self.conv(x)).relu()
+        y0 = self.maxpool(self.norm(self.conv(x)).relu())
         y1 = self.layer1(y0)
         y2 = self.layer2(y1)
         y3 = self.layer3(y2)
