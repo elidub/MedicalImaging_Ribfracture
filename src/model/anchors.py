@@ -8,6 +8,8 @@ import torch
 import torch.nn as nn
 import numpy as np
 
+from src.misc.utils import pairwise_iou
+
 
 class Anchors3D(nn.Module):
     """Generates 3D anchor boxes.
@@ -41,8 +43,8 @@ class Anchors3D(nn.Module):
         self.scales = [2**x for x in [0, 1 / 3, 2 / 3]]
 
         self._num_anchors = len(self.ratios) * len(self.scales)
-        self._strides = [2**i for i in range(3, 8)]
-        self._volumes = [x**3 for x in [32.0, 64.0, 128.0, 256.0, 512.0]]
+        self._strides = [2**i for i in range(2, 7)]
+        self._volumes = [e**3 for e in [64.0, 64.0, 128.0, 256.0, 512.0]]
         self._anchor_dims = self._compute_dims()
 
     def _compute_dims(self):
@@ -86,14 +88,14 @@ class Anchors3D(nn.Module):
         ry = torch.tensor(range(0, feature_height)) + 0.5
         rz = torch.tensor(range(0, feature_depth)) + 0.5
 
-        stride = self._strides[level - 3]
+        stride = self._strides[level - 2]
 
         centers = torch.stack(torch.meshgrid(rx, ry, rz), axis=-1) * stride
         centers = centers.unsqueeze(-2)
         centers = torch.tile(centers, [1, 1, 1, self._num_anchors, 1])
 
         dims = torch.tile(
-            self._anchor_dims[level - 3],
+            self._anchor_dims[level - 2],
             [feature_height, feature_width, feature_depth, 1, 1],
         )
 
@@ -133,3 +135,16 @@ class Anchors3D(nn.Module):
         ]
 
         return torch.cat(anchors, axis=0)
+
+
+def match_anchor_boxes(anchor_boxes, gt_boxes, match_iou=0.5, ignore_iou=0.4):
+    iou_matrix = pairwise_iou(anchor_boxes, gt_boxes)
+
+    max_iou, matched_gt_idx = torch.max(iou_matrix, dim=1, keepdim=False)
+
+    positive_mask = max_iou >= match_iou
+    negative_mask = max_iou < ignore_iou
+
+    ignore_mask = torch.logical_not(torch.logical_or(positive_mask, negative_mask))
+
+    return (matched_gt_idx, positive_mask.float(), ignore_mask.float())

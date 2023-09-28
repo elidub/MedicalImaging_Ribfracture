@@ -1,6 +1,5 @@
 import torch
 from torch import nn
-from src.model.anchors import Anchors3D
 
 
 class DummyNetwork(nn.Module):
@@ -324,12 +323,9 @@ class RetinaNet3D(nn.Module):
             num_anchors=num_anchors,
         )
 
-        self.anchors = Anchors3D()
-
     def forward(self, x):
         c3, c4, c5 = self.backbone(x)
         features = self.fpn(c3, c4, c5)
-        r = torch.cat([self.regressgion_block(f) for f in features], dim=1)
-        c = torch.cat([self.classification_block(f) for f in features], dim=1)
-        a = self.anchors(x)
-        return r, c, a
+        box_y = torch.cat([self.regressgion_block(f) for f in features], dim=1)
+        cls_y = torch.cat([self.classification_block(f) for f in features], dim=1)
+        return torch.cat([box_y, cls_y], dim=-1)
