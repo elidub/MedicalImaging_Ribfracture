@@ -239,7 +239,7 @@ class PyramidFeatures3D(nn.Module):
 
 
 class RegressionBlock3D(nn.Module):
-    def __init__(self, in_channels, out_channels=256, num_anchors=9):
+    def __init__(self, in_channels, out_channels=256, num_anchors=15):
         super().__init__()
 
         self.conv1 = nn.Conv3d(
@@ -271,7 +271,7 @@ class RegressionBlock3D(nn.Module):
 
 
 class ClassificationBlock3D(nn.Module):
-    def __init__(self, in_channels, feature_size=256, num_classes=10, num_anchors=9):
+    def __init__(self, in_channels, feature_size=256, num_classes=10, num_anchors=15):
         super().__init__()
 
         self.conv1 = nn.Conv3d(
@@ -308,7 +308,7 @@ class ClassificationBlock3D(nn.Module):
 
 
 class RetinaNet3D(nn.Module):
-    def __init__(self, in_channels, feature_size=256, num_classes=10, num_anchors=9):
+    def __init__(self, in_channels, feature_size=256, num_classes=10, num_anchors=15):
         super().__init__()
 
         self.backbone = ResNet183D(in_channels)

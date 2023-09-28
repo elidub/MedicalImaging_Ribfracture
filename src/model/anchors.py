@@ -1,5 +1,5 @@
 """
-Mostly copy-paste from https://github.com/yhenon/pytorch-retinanet/blob/master/retinanet/anchors.py
+Mostly copy-paste from https://keras.io/examples/vision/retinanet/
 
 Few modifications made for handling 3D anchors
 """
@@ -10,99 +10,126 @@ import numpy as np
 
 
 class Anchors3D(nn.Module):
+    """Generates 3D anchor boxes.
+
+    This class has operations to generate 3D anchor boxes for feature maps at
+    strides `[8, 16, 32, 64, 128]`. Where each anchor box is of the format `[x, y, z, width, height, depth]`.
+
+    Attributes:
+      aspect_ratios: A list of float values representing the aspect ratios of
+        the anchor boxes at each location on the feature map
+      scales: A list of float values representing the scale of the anchor boxes
+        at each location on the feature map.
+      num_anchors: The number of anchor boxes at each location on feature map
+      volumes: A list of float values representing the volumes of the anchor
+        boxes for each feature map in the feature pyramid.
+      strides: A list of float value representing the strides for each feature
+        map in the feature pyramid.
+    """
+
     def __init__(self):
         super().__init__()
 
-        self.pyramid_levels = [3, 4, 5, 6, 7]
-        self.strides = [2**e for e in self.pyramid_levels]
-        self.sizes = [2 ** (e + 2) for e in self.pyramid_levels]
+        self.ratios = [
+            (0.5, 1.0, 2.0),
+            (1.0, 1.0, 1.0),
+            (0.5, 1.0, 1.5),
+            (1.0, 0.75, 1.5),
+            (1.5, 1.0, 0.5),
+        ]
 
-        self.ratios = np.array([0.5, 1, 2])
-        self.scales = np.array([2**0, 2 ** (1.0 / 3.0), 2 ** (2.0 / 3.0)])
+        self.scales = [2**x for x in [0, 1 / 3, 2 / 3]]
+
+        self._num_anchors = len(self.ratios) * len(self.scales)
+        self._strides = [2**i for i in range(3, 8)]
+        self._volumes = [x**3 for x in [32.0, 64.0, 128.0, 256.0, 512.0]]
+        self._anchor_dims = self._compute_dims()
+
+    def _compute_dims(self):
+        """Computes anchor box dimensions for all ratios and scales at all levels
+        of the feature pyramid.
+        """
+        anchor_dims_all = []
+        for volume in self._volumes:
+            anchor_dims = []
+
+            for ratio in self.ratios:
+                anchor_width = (volume / (ratio[0] * ratio[1])) ** (1.0 / 3.0)
+                anchor_height = (volume / (ratio[0] * ratio[2])) ** (1.0 / 3.0)
+                anchor_depth = (volume / (ratio[1] * ratio[2])) ** (1.0 / 3.0)
+
+                dims = torch.tensor([anchor_width, anchor_height, anchor_depth]).view(
+                    1, 1, 3
+                )
+
+                for scale in self.scales:
+                    anchor_dims.append(scale * dims)
+
+            anchor_dims_all.append(torch.stack(anchor_dims, axis=-2))
+        return anchor_dims_all
+
+    def _get_anchors(self, feature_height, feature_width, feature_depth, level):
+        """Generates anchor boxes for a given 3D feature map size and level
+
+        Arguments:
+          feature_height: An integer representing the height of the feature map.
+          feature_width: An integer representing the width of the feature map.
+          feature_depth: An integer representing the depth of the feature map.
+          level: An integer representing the level of the feature map in the
+            feature pyramid.
+
+        Returns:
+          anchor boxes with the shape
+          `(feature_height * feature_width * feature_depth * num_anchors, 6)`
+        """
+        rx = torch.tensor(range(0, feature_width)) + 0.5
+        ry = torch.tensor(range(0, feature_height)) + 0.5
+        rz = torch.tensor(range(0, feature_depth)) + 0.5
+
+        stride = self._strides[level - 3]
+
+        centers = torch.stack(torch.meshgrid(rx, ry, rz), axis=-1) * stride
+        centers = centers.unsqueeze(-2)
+        centers = torch.tile(centers, [1, 1, 1, self._num_anchors, 1])
+
+        dims = torch.tile(
+            self._anchor_dims[level - 3],
+            [feature_height, feature_width, feature_depth, 1, 1],
+        )
+
+        anchors = torch.concat([centers, dims], axis=-1)
+
+        return anchors.reshape(
+            feature_height * feature_width * feature_depth * self._num_anchors, 6
+        )
+
+        # return tf.reshape(
+        #     anchors,
+        #     [feature_height * feature_width * feature_depth * self._num_anchors, 6],
+        # )
 
     def forward(self, x):
-        x_shape = np.array(x.shape[2:])
-        x_shapes = [(x_shape + 2**e - 1) // (2**e) for e in self.pyramid_levels]
+        """Generates 3D anchor boxes for all the feature maps of the feature pyramid.
 
-        # Compute anchors over all pyramid levels in 3D (hence x, y, z, w, h, d)
-        all_anchors = np.zeros((0, 6)).astype(np.float32)
+        Arguments:
+          image_height: Height of the input image.
+          image_width: Width of the input image.
+          image_depth: Depth of the input image.
 
-        for idx, p in enumerate(self.pyramid_levels):
-            anchors = generate_anchors(
-                base_size=self.sizes[idx], ratios=self.ratios, scales=self.scales
+        Returns:
+          anchor boxes for all the feature maps, stacked as a single tensor
+            with shape `(total_anchors, 6)`
+        """
+        image_height, image_width, image_depth = x.shape[2:]
+
+        anchors = [
+            self._get_anchors(
+                torch.math.ceil(image_height / 2**i),
+                torch.math.ceil(image_width / 2**i),
+                torch.math.ceil(image_depth / 2**i),
+                i,
             )
+            for i in range(1, 6)
+        ]
 
-            shifted_anchors = shift(x_shapes[idx], self.strides[idx], anchors)
-            all_anchors = np.append(all_anchors, shifted_anchors, axis=0)
-
-        all_anchors = np.expand_dims(all_anchors, axis=0)
-        return torch.from_numpy(all_anchors.astype(np.float32)).to(x.device)
-
-
-def generate_anchors(base_size=16, ratios=None, scales=None):
-    """
-    Generate anchor (reference) windows by enumerating aspect ratios X
-    scales w.r.t. a reference window.
-    """
-
-    if ratios is None:
-        ratios = np.array([0.5, 1, 2])
-
-    if scales is None:
-        scales = np.array([2**0, 2 ** (1.0 / 3.0), 2 ** (2.0 / 3.0)])
-
-    num_anchors = len(ratios) * len(scales)
-
-    # initialize output anchors
-    anchors = np.zeros((num_anchors, 6))
-
-    # scale base_size
-    anchors[:, 3:] = base_size * np.tile(scales, (3, len(ratios))).T
-
-    # compute areas of anchors
-    areas = anchors[:, 3] * anchors[:, 4] * anchors[:, 5]
-
-    # correct for ratios
-    anchors[:, 3] = (areas / np.repeat(ratios, len(scales))) ** (1 / 3)
-    anchors[:, 4] = anchors[:, 3] * np.repeat(ratios, len(scales))
-    anchors[:, 5] = anchors[:, 3] * np.repeat(ratios, len(scales))
-
-    # transform from (x_ctr, y_ctr, z_ctr, w, h, d) -> (x1, y1, z1, x2, y2, z2)
-    anchors[:, 0::3] -= np.tile(anchors[:, 3] * 0.5, (2, 1)).T
-    anchors[:, 1::3] -= np.tile(anchors[:, 4] * 0.5, (2, 1)).T
-    anchors[:, 2::3] -= np.tile(anchors[:, 5] * 0.5, (2, 1)).T
-
-    return anchors
-
-
-def shift(shape, stride, anchors):
-    shift_x = (np.arange(0, shape[2]) + 0.5) * stride
-    shift_y = (np.arange(0, shape[1]) + 0.5) * stride
-    shift_z = (np.arange(0, shape[0]) + 0.5) * stride
-
-    shift_x, shift_y, shift_z = np.meshgrid(shift_x, shift_y, shift_z)
-
-    shifts = np.vstack(
-        (
-            shift_x.ravel(),
-            shift_y.ravel(),
-            shift_z.ravel(),
-            shift_x.ravel(),
-            shift_y.ravel(),
-            shift_z.ravel(),
-        )
-    ).transpose()
-
-    # add A anchors (1, A, 6) to
-    # cell K shifts (K, 1, 6) to get
-    # shift anchors (K, A, 6)
-    # reshape to (K*A, 6) shifted anchors
-    A = anchors.shape[0]
-    K = shifts.shape[0]
-    all_anchors = anchors.reshape((1, A, 6)) + shifts.reshape((1, K, 6)).transpose(
-        (1, 0, 2)
-    )
-
-    all_anchors = all_anchors.reshape((K * A, 6))
-
-    return all_anchors
+        return torch.cat(anchors, axis=0)
