@@ -227,7 +227,7 @@ class PyramidFeatures3D(nn.Module):
 
         p4 = self.p4_conv1(c4) + p5_u
         p4_u = self.p4_upsample(p4)
-        p4 = self.p4_conv2(p4_u)
+        p4 = self.p4_conv2(p4)
 
         p3 = self.p3_conv1(c3) + p4_u
         p3 = self.p3_conv2(p3)
