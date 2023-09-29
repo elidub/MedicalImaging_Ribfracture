@@ -1,7 +1,6 @@
 import torch
 from torch import nn
 
-
 class DummyNetwork(nn.Module):
     # This is a dummy network, such that the code runs
     def __init__(self):
@@ -152,6 +151,7 @@ class UNet3D(nn.Module):
         self.up_block1 = ConvUpBlock(32, out_channels)
 
     def forward(self, x):
+        x = x.unsqueeze(1)
         y = self.down_block1(x)
         y = self.down_block2(y)
         y = self.down_block3(y)
@@ -160,8 +160,8 @@ class UNet3D(nn.Module):
         y = self.up_block4(y)
         y = self.up_block3(y)
         y = self.up_block2(y)
-        return self.up_block1(y)
-
+        y = self.up_block1(y)
+        return y.squeeze(1)
 
 class ResNet183D(nn.Module):
     def __init__(
