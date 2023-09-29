@@ -7,19 +7,17 @@ sys.path.insert(1, sys.path[0] + '/..')
 from src.data.utils import crop
 
 class Learner(pl.LightningModule):
-    def __init__(self, net):
+    def __init__(self, net, loss):
         super().__init__()
         self.net = net
-        self.loss_fn = nn.CrossEntropyLoss()
+        self.loss = loss
+
 
     def forward(self, batch):
-        l = 256
         x, y = batch
-        print('Croping images to size', l)
-        x, y = crop(x, l = l), crop(y, l = l)
         x, y = x.float(), y.float()
         y_hat = self.net(x)
-        # y = self.label_processor(y)
+        print('\nx.shape  ', x.shape, '\ny.shape  ', y.shape, '\ny_hat.shape', y_hat.shape)
         return y_hat, y
     
     def step(self, batch, mode = 'train'):
@@ -28,7 +26,7 @@ class Learner(pl.LightningModule):
         y_hat, y = self.forward(batch)
 
         # Loss
-        loss = self.loss_fn(y_hat, y)
+        loss = self.loss(y_hat, y)
 
         # Metrics
         acc = (y_hat.argmax(dim=1) == y).float().mean()
