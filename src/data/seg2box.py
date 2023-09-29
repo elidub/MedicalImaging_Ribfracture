@@ -12,12 +12,12 @@ def read_image(file_path):
     header = nii_img.header
     return image_data, header
 
+# From here it's about converting the segmentation mask to bounding boxes
 
-def convert(split_dir, ID):
+def convert(path):
     """ Convert the segmentation mask to bounding boxes """ 
-    labels_path = os.path.join(split_dir, 'labels', f"{ID}-label.nii.gz")
 
-    annot, _ = read_image(labels_path)
+    annot, _ = read_image(path)
     num_segments = np.unique(annot)
 
     bounding_boxes = []
@@ -48,17 +48,20 @@ def convert(split_dir, ID):
     return bounding_boxes, ids
 
 
-def new_annots(split_dir):
+def new_annots(split_dir, split):
     """ Use each image per split to form a dictionary of bounding boxes """
-    metadata = pd.read_csv(split_dir + f'/ribfrac-{split_dir}-info.csv')
+    metadata = pd.read_csv(split_dir + f'/ribfrac-{split}-info.csv')
 
     annots = {}
 
-    for file in os.listdir(split_dir + '/labels'):
+    labels_dir = split_dir + '/labels'
+    for file in os.listdir(labels_dir):
+
         im_id = file.split('-')[0]
+        print(f'running for image: {im_id}')
         im_metadata = metadata[metadata['public_id'] == im_id]
 
-        boxes, ids = convert(split_dir, im_id)
+        boxes, _ = convert(labels_dir + '/' + file)
         boxes.insert(0, [])
 
         # Convert all numpy int64 to int
@@ -70,11 +73,66 @@ def new_annots(split_dir):
 
     return annots
 
-def process_split(split, path=''):
+def process_split(split, data_dir, save_path=''):
     """ Process the train/val/test split and save the annotations as a json file """
-    anns = new_annots(split)
+    path = data_dir + split 
+    anns = new_annots(path, split)
 
-    with open(f"{path}{split}.json", "w+") as outfile:
+    with open(f"{split}.json", "w+") as outfile:
         json.dump(anns, outfile)
 
-process_split('train')
+# Extract bounding boxes for a split
+# process_split('val', "../../data_dev/")
+
+# From here it's about extracting the image patches
+
+def extract_gt_patches(img_path, annot_path, img_id):
+    annot_data, _ = read_image(annot_path)
+    img_data, _ = read_image(img_path)
+
+    # Get the bounding boxes
+    bounding_boxes, ids = convert(annot_path)
+
+    img_patches = []
+    annot_patches = []
+    
+    # Extract the patches
+    for box in bounding_boxes:
+        x, y, z, width, height, depth = box
+        img_patch = img_data[x:x+width, y:y+height, z:z+depth]
+        annot_patch = annot_data[x:x+width, y:y+height, z:z+depth]
+
+        annot_patches.append(annot_patch)
+        img_patches.append(img_patch)
+
+    return img_patches, annot_patches 
+
+
+def run_per_img(split, img_id):
+    ''' Extract GT patches for the original images and annotations per split and image. '''
+
+    img_path = f"../../data_dev/{split}/images/{img_id}-image.nii.gz"
+    annot_path = f"../../data_dev/{split}/labels/{img_id}-label.nii.gz"
+
+    img_patches, annot_patches = extract_gt_patches(img_path, annot_path, img_id)
+    return img_patches, annot_patches 
+
+def run_per_split(split):
+    ''' Extract GT patches for the original images and annotations per split. 
+    (for now I just save them in a dict, but we can save them as .nii.gz files)'''
+
+    split_patches = {}
+
+    path = f"../../data_dev/{split}/labels"
+    for file in os.listdir(path):
+        img_id = file.split('-')[0]
+        
+        print(f'running for image: {img_id}')
+        img_patches, annot_patches = run_per_img(split, img_id)
+
+        split_patches[img_id] = {'img_patches': img_patches, 'annot_patches': annot_patches}
+
+    return split_patches                              
+
+# Extract patches for a whole split
+# split_patches = run_per_split('train')
