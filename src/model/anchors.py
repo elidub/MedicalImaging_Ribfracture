@@ -44,7 +44,7 @@ class Anchors3D(nn.Module):
 
         self._num_anchors = len(self.ratios) * len(self.scales)
         self._strides = [2**i for i in range(2, 7)]
-        self._volumes = [e**3 for e in [64.0, 64.0, 128.0, 256.0, 512.0]]
+        self._volumes = [e**3 for e in [32.0, 64.0, 128.0, 256.0, 512.0]]
         self._anchor_dims = self._compute_dims()
 
     def _compute_dims(self):
@@ -104,11 +104,6 @@ class Anchors3D(nn.Module):
         return anchors.reshape(
             feature_height * feature_width * feature_depth * self._num_anchors, 6
         )
-
-        # return tf.reshape(
-        #     anchors,
-        #     [feature_height * feature_width * feature_depth * self._num_anchors, 6],
-        # )
 
     def forward(self, x):
         """Generates 3D anchor boxes for all the feature maps of the feature pyramid.

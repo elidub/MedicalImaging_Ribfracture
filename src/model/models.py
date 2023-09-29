@@ -319,7 +319,7 @@ class RetinaNet3D(nn.Module):
         self.classification_block = ClassificationBlock3D(
             in_channels=256,
             feature_size=feature_size,
-            num_classes=num_classes,
+            num_classes=num_classes + 2,
             num_anchors=num_anchors,
         )
 
@@ -328,4 +328,4 @@ class RetinaNet3D(nn.Module):
         features = self.fpn(c3, c4, c5)
         box_y = torch.cat([self.regressgion_block(f) for f in features], dim=1)
         cls_y = torch.cat([self.classification_block(f) for f in features], dim=1)
-        return torch.cat([box_y, cls_y], dim=-1)
+        return box_y, cls_y
