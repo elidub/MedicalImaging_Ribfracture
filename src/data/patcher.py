@@ -32,8 +32,8 @@ def parse_option(notebook=False):
     parser = argparse.ArgumentParser(description="RibFracPatcher")
 
     parser.add_argument('--split', type=str, default='val', help='train, val, or test')
-    parser.add_argument('--data_dir', type=str, default='data_dev', help='Path to data directory')
-    parser.add_argument('--save_dir', type=str, default='data_dev_patches', help='Path to save directory')
+    parser.add_argument('--data_dir', type=str, default='../data_dev', help='Path to data directory')
+    parser.add_argument('--save_dir', type=str, default='../data_dev_patches', help='Path to save directory')
     parser.add_argument('--patch_size', type=int, nargs=3, default=[128, 128, 128], help='Patch size')
 
     args = parser.parse_args() if not notebook else parser.parse_args(args=[])
@@ -47,15 +47,14 @@ def main(args):
         os.makedirs(os.path.join(args.save_dir, args.split, 'images'))
         os.makedirs(os.path.join(args.save_dir, args.split, 'labels'))
 
-    split_dir_images = os.path.join(args.data_dir, args.split, 'images')
-    split_dir_labels = os.path.join(args.data_dir, args.split, 'labels')
-
     print('Splitting {} image data into patches...'.format(args.split))
+    split_dir_images = os.path.join(args.data_dir, args.split, 'images')
     for file in tqdm(os.listdir(split_dir_images)):
         image_patches = patch_volume(read_image(os.path.join(split_dir_images, file))[0], args.patch_size)
         np.save(os.path.join(args.save_dir, args.split, 'images', file.split('.')[0]), image_patches)
 
     if args.split != 'test':
+        split_dir_labels = os.path.join(args.data_dir, args.split, 'labels')
         print('Splitting {} label data into patches...'.format(args.split))
         for file in tqdm(os.listdir(split_dir_labels)):
             label_patches = patch_volume(read_image(os.path.join(split_dir_labels, file))[0], args.patch_size)

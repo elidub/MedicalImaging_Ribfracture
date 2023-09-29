@@ -132,5 +132,6 @@ dmypy.json
 # our own stuff
 data_dev/*
 data_dev.zip
+data_dev_patches/*
 logs/test
 .DS_Store
