@@ -1,0 +1,21 @@
+#!/bin/bash
+
+#SBATCH --partition=gpu_shared_course
+#SBATCH --gres=gpu:0
+#SBATCH --job-name=DownloadData
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=3
+#SBATCH --time=00:10:00
+#SBATCH --mem=32000M
+#SBATCH --output=out/downloadData_%A.out
+
+cd
+mkdir data
+mkdir raw
+mkdir train
+mkdir val
+mkdir test
+
+wget https://zenodo.org/record/3893496/files/ribfrac-val-images.zip?download=1
+unzip ribfrac-val-images.zip?download=1
+rm ribfrac-val-images.zip?download=1
