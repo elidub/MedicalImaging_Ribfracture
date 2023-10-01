@@ -53,13 +53,6 @@ def main(args):
             img_boxes, label_boxes = extract_boxes_from_patches(img_patches, label_patches)
             np.save(os.path.join(box_dir, args.split, 'images', f'{img_id}-image.npy'), img_boxes)
 
-            print('img_data.shape', img_data.shape)
-            print('img_patches.shape', img_patches.shape)
-            print('img_boxes.shape', img_boxes.shape)
-            print('label_data.shape', label_data.shape)
-            print('label_patches.shape', label_patches.shape)
-            print('label_boxes.shape', label_boxes.shape)
-
 
 if __name__ == '__main__':
     args = parse_option()
