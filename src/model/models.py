@@ -261,7 +261,7 @@ class RegressionBlock3D(nn.Module):
         y = self.conv2(y).relu()
         y = self.conv3(y).relu()
         y = self.conv4(y).relu()
-        y = self.conv5(y).relu()
+        y = self.conv5(y)
 
         y = y.permute(0, 2, 3, 4, 1)
 
@@ -296,7 +296,7 @@ class ClassificationBlock3D(nn.Module):
         y = self.conv2(y).relu()
         y = self.conv3(y).relu()
         y = self.conv4(y).relu()
-        y = self.conv5(y).sigmoid()
+        y = self.conv5(y)
 
         y = y.permute(0, 2, 3, 4, 1)
         b, w, h, d, _ = y.shape

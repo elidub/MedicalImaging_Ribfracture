@@ -23,6 +23,18 @@ def bbox_xyzwhd_to_corners(boxes):
     return torch.cat([x1, y1, z1, x2, y2, z2], dim=-1)
 
 
+def bbox_centerwhd_to_xyzwhd(boxes):
+    cx, cy, cz, w, h, d = torch.split(boxes, 1, dim=-1)
+
+    # Calculate top-left coordinates
+    x = cx - w / 2
+    y = cy - h / 2
+    z = cz - d / 2
+
+    # Stack the results into a new tensor of shape (batch_size, 6)
+    return torch.cat([x, y, x, w, h, d], dim=-1)
+
+
 def pairwise_iou(boxes1, boxes2):
     boxes1 = bbox_xyzwhd_to_corners(boxes1)
     boxes2 = bbox_xyzwhd_to_corners(boxes2)
