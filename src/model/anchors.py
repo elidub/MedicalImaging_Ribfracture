@@ -32,11 +32,16 @@ class Anchors3D(nn.Module):
         super().__init__()
 
         self.ratios = [
-            (0.5, 1.0, 2.0),
+            (1.0, 1.27190562021747, 0.4305729632250166),
+            (1.0, 1.27190562021747, 0.7124167433180173),
+            (1.0, 1.27190562021747, 0.994260523411018),
+            (1.0, 1.8585922135277342, 0.4305729632250166),
+            (1.0, 1.8585922135277342, 0.7124167433180173),
+            (1.0, 1.8585922135277342, 0.994260523411018),
+            (1.0, 0.6852190269072056, 0.4305729632250166),
+            (1.0, 0.6852190269072056, 0.7124167433180173),
+            (1.0, 0.6852190269072056, 0.994260523411018),
             (1.0, 1.0, 1.0),
-            (0.5, 1.0, 1.5),
-            (1.0, 0.75, 1.5),
-            (1.5, 1.0, 0.5),
         ]
 
         self.scales = [2**e for e in [0, 1 / 3, 2 / 3]]
@@ -132,8 +137,8 @@ class Anchors3D(nn.Module):
         return bbox_centerwhd_to_xyzwhd(torch.cat(anchors, axis=0))
 
 
-def match_anchor_boxes(anchor_boxes, gt_boxes, match_iou=0.5, ignore_iou=0.4):
-# def match_anchor_boxes(anchor_boxes, gt_boxes, match_iou=0.001, ignore_iou=0.0001):
+# def match_anchor_boxes(anchor_boxes, gt_boxes, match_iou=0.5, ignore_iou=0.4):
+def match_anchor_boxes(anchor_boxes, gt_boxes, match_iou=0.001, ignore_iou=0.0001):
     iou_matrix = pairwise_iou(anchor_boxes, gt_boxes)
 
     max_iou, matched_gt_idx = torch.max(iou_matrix, dim=1, keepdim=False)
