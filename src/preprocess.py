@@ -53,6 +53,7 @@ def main(args):
             np.save(os.path.join(patch_dir, args.split, 'labels', f'{img_id}-label.npy'), label_patches)
             img_boxes, label_boxes = extract_boxes_from_patches(img_patches, label_patches)
             np.save(os.path.join(box_dir, args.split, 'images', f'{img_id}-image.npy'), img_boxes)
+            np.save(os.path.join(box_dir, args.split, 'labels', f'{img_id}-label.npy'), label_boxes)
 
 
 if __name__ == '__main__':
