@@ -9,7 +9,8 @@
 #SBATCH --mem=32000M
 #SBATCH --output=jobs/slurm/download_data_%A.out
 
-cd /scratch-shared/ribfrac
+# cd /scratch-shared/ribfrac
+cd /~/AIMedicalImaging/
 
 mkdir data
 cd data
