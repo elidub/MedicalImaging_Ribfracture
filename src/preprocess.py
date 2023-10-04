@@ -46,7 +46,7 @@ def main(args):
         img_data = normalize(img_data)
         img_patches = patch_volume(img_data, args.patch_size)
         np.save(os.path.join(patch_dir, args.split, 'images', f'{img_id}-image.npy'), img_patches)
-        if split_dir_images != 'test':
+        if args.split != 'test':
             label_data, _ = read_image(label_path)
             label_patches = patch_volume(label_data, args.patch_size)
             np.save(os.path.join(patch_dir, args.split, 'labels', f'{img_id}-label.npy'), label_patches)
