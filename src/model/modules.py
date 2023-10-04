@@ -19,16 +19,16 @@ class BoxLabelEncoder:
             (1, num_channels, volume_width, volume_height, volume_depth)
         )
 
-        self.dim_norm = torch.tensor(
-            [
-                volume_width,
-                volume_height,
-                volume_depth,
-                volume_width,
-                volume_height,
-                volume_depth,
-            ]
-        )
+        # self.dim_norm = torch.tensor(
+        #     [
+        #         volume_width,
+        #         volume_height,
+        #         volume_depth,
+        #         volume_width,
+        #         volume_height,
+        #         volume_depth,
+        #     ]
+        # )
 
         self.anchors = get_anchors(sample)
         self.box_variance = torch.tensor(box_variance)
@@ -50,12 +50,12 @@ class BoxLabelEncoder:
             box_res[i] = (
                 torch.cat(
                     [
-                        match_box[:, :3] - self.anchors[:, :3],
+                        (match_box[:, :3] - self.anchors[:, :3]) / self.anchors[:, 3:],
                         torch.log(match_box[:, 3:]) / self.anchors[:, 3:],
                     ],
                     dim=-1,
                 )
-                / self.dim_norm
+                # / self.dim_norm
                 / self.box_variance
             )
 
@@ -64,6 +64,56 @@ class BoxLabelEncoder:
             match_cls = torch.where(pos_mask.unsqueeze(-1) != 1.0, -1.0, match_cls)
             cls_res[i] = torch.where(neg_mask.unsqueeze(-1) == 1.0, -2.0, match_cls)
         return box_res, cls_res.squeeze(-1).long() + 2
+
+
+class BoxLabelDecoder:
+    def __init__(
+        self,
+        num_channels=1,
+        volume_width=64,
+        volume_height=64,
+        volume_depth=64,
+        box_variance=[0.1, 0.1, 0.1, 0.2, 0.2, 0.2],
+    ):
+        get_anchors = Anchors3D()
+        sample = torch.zeros(
+            (1, num_channels, volume_width, volume_height, volume_depth)
+        )
+
+        # self.dim_norm = torch.tensor(
+        #     [
+        #         volume_width,
+        #         volume_height,
+        #         volume_depth,
+        #         volume_width,
+        #         volume_height,
+        #         volume_depth,
+        #     ]
+        # )
+
+        self.anchors = get_anchors(sample)
+        self.box_variance = torch.tensor(box_variance)
+
+    def decode(self, pred_box, pred_cls):
+        b = pred_box.shape[0]
+        box_res = torch.zeros((b, self.anchors.shape[0], 6))
+        cls_res = torch.zeros((b, self.anchors.shape[0], pred_cls.shape[-1]))
+
+        pred_box *= self.box_variance
+        # pred_box *= self.dim_norm
+
+        for i in range(b):
+            box_res[i] = torch.cat(
+                [
+                    pred_box[i, :, :3] * self.anchors[:, 3:] + self.anchors[:, :3],
+                    torch.exp(pred_box[i, :, 3:] * self.anchors[:, 3:]),
+                ],
+                dim=-1,
+            )
+
+            cls_res[i] = pred_cls[i].softmax(dim=-1)
+
+        return box_res, cls_res
 
 
 class RetinaNetLoss(nn.Module):
