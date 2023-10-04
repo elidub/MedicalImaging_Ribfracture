@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 
 def crop(x, l = -1):
     x = x.unsqueeze(1) # Unsqueeze the channel dimension
@@ -31,3 +32,13 @@ def simplify_labels(labels):
     """
     labels[labels != 0] = 1
     return labels
+
+def extrapolate_bones(volume):
+    """
+        Remove low intensity voxels below intensity 200
+
+        volume: np.array
+    """
+    return np.where(np.asarray(volume) > 200, volume, 0)
+
+

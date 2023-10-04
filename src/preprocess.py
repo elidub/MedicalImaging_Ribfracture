@@ -5,7 +5,7 @@ from tqdm import tqdm
 from data.dataset import read_image
 from data.patcher import patch_volume
 from data.seg2box import extract_boxes_from_patches
-from data.utils import normalize, simplify_labels
+from data.utils import normalize, simplify_labels, extrapolate_bones
 
 
 def parse_option(notebook=False):
@@ -43,6 +43,7 @@ def main(args):
         img_path = f"{args.data_dir}/raw/{args.split}/images/{img_id}-image.nii.gz"
         label_path = f"{args.data_dir}/raw/{args.split}/labels/{img_id}-label.nii.gz"
         img_data, _ = read_image(img_path)
+        img_data = extrapolate_bones(img_data)
         img_data = normalize(img_data)
         img_patches = patch_volume(img_data, args.patch_size)
         np.save(os.path.join(patch_dir, args.split, 'images', f'{img_id}-image.npy'), img_patches)
