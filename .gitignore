@@ -136,3 +136,4 @@ data_dev_patches/*
 logs/test
 .DS_Store
 /data/
+jobs/slurm
