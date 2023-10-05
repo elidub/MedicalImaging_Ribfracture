@@ -1,4 +1,5 @@
 import torch
+import numpy as np
 
 def crop(x, l = -1):
     x = x.unsqueeze(1) # Unsqueeze the channel dimension
@@ -12,3 +13,32 @@ def label_processor(self, y):
     y = y[:, :, :, 0]  # Only select the first slice, similar to the dummy network
     y_downsampled = torch.nn.functional.avg_pool2d(y, kernel_size = 2*7, stride = 2**7).view(-1, 16)
     return y_downsampled
+
+def normalize(volume):
+    """
+        Normalize the volume to be in the range [0, 1]
+
+        volume: np.array
+    """
+    mean = volume.mean()
+    std = volume.std()
+    return (volume - mean) / std
+
+def simplify_labels(labels):
+    """
+        Project all label annotations which are not 0 to 1.
+
+        labels: np.array
+    """
+    labels[labels != 0] = 1
+    return labels
+
+def extrapolate_bones(volume):
+    """
+        Remove low intensity voxels below intensity 200
+
+        volume: np.array
+    """
+    return np.where(np.asarray(volume) > 200, volume, 0)
+
+

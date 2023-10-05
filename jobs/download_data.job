@@ -1,0 +1,73 @@
+#!/bin/bash
+
+#SBATCH --partition=gpu
+#SBATCH --gres=gpu:1
+#SBATCH --job-name=DownloadData
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=3
+#SBATCH --time=08:00:00
+#SBATCH --mem=32000M
+#SBATCH --output=jobs/slurm/download_data_%A.out
+
+# cd /scratch-shared/ribfrac
+cd /~/AIMedicalImaging/
+
+mkdir data
+cd data
+
+mkdir raw
+cd raw
+
+#### Val
+mkdir val
+cd val
+
+wget https://zenodo.org/record/3893496/files/ribfrac-val-images.zip?download=1
+unzip ribfrac-val-images.zip?download=1
+mv ribfrac-val-images images
+rm ribfrac-val-images.zip?download=1
+
+wget https://zenodo.org/record/3893496/files/ribfrac-val-labels.zip?download=1
+unzip ribfrac-val-labels.zip?download=1
+mv ribfrac-val-labels labels
+rm ribfrac-val-labels.zip?download=1
+
+wget https://zenodo.org/record/3893496/files/ribfrac-val-info.csv?download=1
+mv ribfrac-val-info.csv labels/ribfrac-val-info.csv
+
+#### Train
+cd ..
+mkdir train
+cd train
+
+wget https://zenodo.org/record/3893508/files/ribfrac-train-images-1.zip?download=1
+unzip ribfrac-train-images-1.zip?download=1
+mv ribfrac-train-images-1 images1
+rm ribfrac-train-images-1.zip?download=1
+
+wget https://zenodo.org/record/3893498/files/ribfrac-train-images-2.zip?download=1
+unzip ribfrac-train-images-2.zip?download=1
+mv ribfrac-train-images-2 images2
+rm ribfrac-train-images-2.zip?download=1
+
+wget https://zenodo.org/record/3893508/files/ribfrac-train-labels-1.zip?download=1
+unzip ribfrac-train-labels-1.zip?download=1
+mv ribfrac-train-labels-1 labels1
+rm ribfrac-train-labels-1.zip?download=1
+wget https://zenodo.org/record/3893498/files/ribfrac-train-labels-2.zip?download=1
+unzip ribfrac-train-labels-2.zip?download=1
+mv ribfrac-train-labels-2 labels2
+rm ribfrac-train-labels-2.zip?download=1
+
+wget https://zenodo.org/record/3893508/files/ribfrac-train-info-1.csv?download=1
+wget https://zenodo.org/record/3893498/files/ribfrac-train-info-2.csv?download=1
+
+#### Test
+cd ..
+mkdir test
+cd test
+
+wget https://zenodo.org/record/3993380/files/ribfrac-test-images.zip?download=1
+unzip ribfrac-test-images.zip?download=1
+mv ribfrac-test-images images
+rm ribfrac-test-images.zip?download=1
