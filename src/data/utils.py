@@ -14,7 +14,7 @@ def label_processor(self, y):
     y_downsampled = torch.nn.functional.avg_pool2d(y, kernel_size = 2*7, stride = 2**7).view(-1, 16)
     return y_downsampled
 
-def normalize(volume):
+def normalize_standard(volume):
     """
         Normalize the volume to be in the range [0, 1]
 
@@ -23,6 +23,16 @@ def normalize(volume):
     mean = volume.mean()
     std = volume.std()
     return (volume - mean) / std
+
+def normalize_minmax(volume):
+    """
+        Normalize the volume to be in the range [0, 1]
+
+        volume: np.array
+    """
+    min_value = volume.min()
+    max_value = volume.max()
+    return (volume - min_value) / (max_value - min_value)
 
 def simplify_labels(labels):
     """
@@ -41,4 +51,12 @@ def extrapolate_bones(volume):
     """
     return np.where(np.asarray(volume) > 200, volume, 0)
 
+def clip_values(volume, min_value, max_value):
+    """
+        Clip the values of the volume to be in the range [min_value, max_value]
 
+        volume: np.array
+        min_value: int
+        max_value: int
+    """
+    return np.clip(volume, min_value, max_value)
