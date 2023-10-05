@@ -1,11 +1,27 @@
 import torch
 import numpy as np
+from torch import nn
 
 def crop(x, l = -1):
     x = x.unsqueeze(1) # Unsqueeze the channel dimension
     assert len(x.shape) == 5, "Input tensor must have 5 dimensions"
     if l != -1: x = x[:, :, :l, :l, :l] # Crop the input tensor if l is specified
     return x
+
+def pad_list(x_unpadded, padding_value = 0, size = 64):
+    return torch.stack([nn.functional.pad(x, (
+            0, size - x.shape[-1],
+            0, size - x.shape[-2], 
+            0, size - x.shape[-3]
+        ), value = padding_value) for x in x_unpadded])
+
+def pad_tensor(x_unpadded, padding_value = 0, size = 64):
+    x = x_unpadded
+    return nn.functional.pad(x, (
+            0, size - x.shape[-1],
+            0, size - x.shape[-2], 
+            0, size - x.shape[-3]
+        ), value = padding_value)
 
 def label_processor(self, y):
     # This is a placeholder function, such that it works with the dummy network!!!
