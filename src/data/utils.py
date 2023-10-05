@@ -1,10 +1,12 @@
-import os
+import os, sys
 import torch
 import argparse
 import numpy as np
 from torch import nn
 from tqdm import tqdm
-from misc.files import read_image
+
+sys.path.insert(1, sys.path[0] + '/..')
+from src.misc.files import read_image
 
 
 def crop(x, l = -1):

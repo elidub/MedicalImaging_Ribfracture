@@ -1,8 +1,10 @@
+import sys
 import torch
 from torch.utils.data import Dataset, DataLoader
 import lightning.pytorch as pl
 from torchvision.transforms import ToTensor
 
+sys.path.insert(1, sys.path[0] + '/..')
 from src.data.dataset import CustomImageDataset, BoxesDataset
 
 class DataModule(pl.LightningDataModule):
