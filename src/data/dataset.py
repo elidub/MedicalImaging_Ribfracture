@@ -7,7 +7,7 @@ from PIL import Image
 import numpy as np
 
 sys.path.insert(1, sys.path[0] + '/..')
-from src.data.utils import pad
+from src.data.utils import pad_tensor
 
 
 def read_image(file_path):
@@ -49,25 +49,32 @@ class CustomImageDataset(torch.utils.data.Dataset):
         return image, label
     
 class BoxesDataset(torch.utils.data.Dataset):
-    def __init__(self, split='val', dir = '../data', transform=None, target_transform=None):
+    def __init__(self, split='val', dir = '../data', 
+                 pad_value = 0, pad_size = 64,
+                 transform=None, target_transform=None):
+        self.pad_value = pad_value
+        self.pad_size = pad_size
+
         self.split = split
-        self.split_dir = os.path.join(dir, split)
+        self.split_dir = os.path.join(dir, 'boxes', split)
 
         self.transform = transform
         self.target_transform = target_transform
 
         self.boxes = []
-        self.x_path = x_path = os.path.join(self.split_dir, 'boxes/images')
-        self.y_path = os.path.join(self.split_dir, 'boxes/labels')
+        self.x_path = x_path = os.path.join(self.split_dir, 'images')
+        if self.split != 'test':
+            self.y_path = os.path.join(self.split_dir, 'labels')
         for file in os.listdir(x_path):
             patches = os.listdir(os.path.join(x_path, file))
             for patch in patches:
                 boxes = os.listdir(os.path.join(x_path, file, patch))
                 for box in boxes:
-                    self.boxes.append(os.path.join((file, patch, box)))
+                    box_path = os.path.join(file, patch, box)
+                    self.boxes.append(box_path)
 
     def __len__(self):
-        return len(self.IDs)
+        return len(self.boxes)
 
     def __getitem__(self, idx):
         box = self.boxes[idx]
@@ -84,5 +91,8 @@ class BoxesDataset(torch.utils.data.Dataset):
         y = torch.from_numpy(y)
 
         if self.target_transform: y = self.target_transform(y)
+        
+        x = pad_tensor(x, pad_value = self.pad_value, pad_size = self.pad_size)
+        y = pad_tensor(y, pad_value = self.pad_value, pad_size = self.pad_size)
 
         return x, y

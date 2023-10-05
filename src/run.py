@@ -13,11 +13,14 @@ def parse_option(notebook = False):
 
     # Model
     parser.add_argument('--net', type=str, default='unet3d', help='Network architecture')
+    parser.add_argument('--data_dir', type=str, default='../data', help='Path to data directory')
+    parser.add_argument('--dataset', type=str, default='boxes', help='Dataset type')
+    parser.add_argument('--splits', type=str, nargs='+', default=['train', 'val', 'test'], help='Splits to use')
 
     # Training 
     parser.add_argument('--max_epochs', type=int, default=3, help='Max number of training epochs')
     parser.add_argument('--num_workers', type=int, default=0, help='Number of workers for dataloader')
-    parser.add_argument('--batch_size', type=int, default=1, help='Batch size')
+    parser.add_argument('--batch_size', type=int, default=2, help='Batch size')
 
     # Logging
     parser.add_argument('--ckpt_path', type=str, default='test', help='Path to save checkpoint')
@@ -32,7 +35,9 @@ def parse_option(notebook = False):
 def main(args):
     set_seed_and_precision(args)
 
-    datamodule = DataModule(dir = '../data_boxes', dataset = 'boxes', num_workers=args.num_workers, batch_size=args.batch_size)
+    datamodule = DataModule(dir = args.data_dir, dataset = args.dataset, 
+                            splits = args.splits,
+                            num_workers=args.num_workers, batch_size=args.batch_size)
     model = setup_model(net = args.net)
 
     trainer = pl.Trainer(

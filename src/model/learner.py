@@ -17,7 +17,7 @@ class Learner(pl.LightningModule):
         x, y = batch
         x, y = x.float(), y.float()
         y_hat = self.net(x)
-        print('\nx.shape  ', x.shape, '\ny.shape  ', y.shape, '\ny_hat.shape', y_hat.shape)
+        # print('\nx.shape  ', x.shape, '\ny.shape  ', y.shape, '\ny_hat.shape', y_hat.shape)
         return y_hat, y
     
     def step(self, batch, mode = 'train'):
@@ -29,7 +29,7 @@ class Learner(pl.LightningModule):
         loss = self.loss(y_hat, y)
 
         # Metrics
-        acc = (y_hat.argmax(dim=1) == y).float().mean()
+        acc = ((y_hat > 0.5) == y).float().mean()
         # better metrics to come ...
 
         # Log

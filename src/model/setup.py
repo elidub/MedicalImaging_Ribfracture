@@ -9,7 +9,7 @@ def setup_model(net = 'dummy'):
         loss = nn.CrossEntropyLoss()
     elif net == 'unet3d':
         net = UNet3D(1, 1)
-        loss = nn.CrossEntropyLoss()
+        loss = nn.BCELoss()
     else:
         raise ValueError('Invalid network type')
     

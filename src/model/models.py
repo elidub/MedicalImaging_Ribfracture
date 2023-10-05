@@ -113,7 +113,8 @@ class UNet3D(nn.Module):
         y = self.up_block3(y)
         y = self.up_block2(y)
         y = self.up_block1(y)
-        return y.squeeze(1)
+        y = y.squeeze(1)
+        return torch.sigmoid(y)
 
 
 class ResidualBlock(nn.Module):

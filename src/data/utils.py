@@ -15,13 +15,13 @@ def pad_list(x_unpadded, padding_value = 0, size = 64):
             0, size - x.shape[-3]
         ), value = padding_value) for x in x_unpadded])
 
-def pad_tensor(x_unpadded, padding_value = 0, size = 64):
+def pad_tensor(x_unpadded, pad_value = 0, pad_size = 64):
     x = x_unpadded
     return nn.functional.pad(x, (
-            0, size - x.shape[-1],
-            0, size - x.shape[-2], 
-            0, size - x.shape[-3]
-        ), value = padding_value)
+            0, pad_size - x.shape[-1],
+            0, pad_size - x.shape[-2], 
+            0, pad_size - x.shape[-3]
+        ), value = pad_value)
 
 def label_processor(self, y):
     # This is a placeholder function, such that it works with the dummy network!!!

@@ -6,12 +6,13 @@ from torchvision.transforms import ToTensor
 from src.data.dataset import CustomImageDataset, BoxesDataset
 
 class DataModule(pl.LightningDataModule):
-    def __init__(self, dir, dataset = 'images', batch_size = 2, num_workers = 0):
+    def __init__(self, dir, dataset = 'images', batch_size = 2, num_workers = 0, splits = ['train', 'val', 'test']):
         super().__init__()
         self.dir = dir
         self.dataset = dataset
         self.batch_size = batch_size
         self.num_workers = num_workers
+        self.splits = splits
 
     def setup(self, stage=None):
 
@@ -23,8 +24,8 @@ class DataModule(pl.LightningDataModule):
             self.collate_fn = self.custom_collate
         else:
             raise ValueError('Unknown dataset type')
-
-        self.datasets = { split : dataset(split = split) for split in ['train', 'val', 'test'] }
+        
+        self.datasets = { split : dataset(split = split, dir=self.dir) for split in self.splits }
 
     def custom_collate(self, batch):
         x, y = zip(*batch)  # Separate data and labels
