@@ -1,6 +1,11 @@
+import os
 import torch
+import argparse
 import numpy as np
 from torch import nn
+from tqdm import tqdm
+from misc.files import read_image
+
 
 def crop(x, l = -1):
     x = x.unsqueeze(1) # Unsqueeze the channel dimension
@@ -36,9 +41,56 @@ def normalize_standard(volume):
 
         volume: np.array
     """
+    
     mean = volume.mean()
     std = volume.std()
-    return (volume - mean) / std
+    epsilon = 0.00001
+    return (volume - mean) / (std + epsilon)
+
+def normalize_dir(image_dir, args):
+    """
+        Normalize the images in image_dir to be in the range [0, 1]
+
+        Heavy load! Takes a long time to run!
+    """ 
+    means = []
+    voxels = []
+
+    for file in tqdm(os.listdir(image_dir)):
+        img_id = file.split('-')[0]
+        img_path = f"{args.data_dir}/raw/{args.split}/images/{img_id}-image.nii.gz"
+        img_data, _ = read_image(img_path)
+        means.append(np.mean(img_data, axis=0))
+        voxels.append(np.size(np.flatten(img_data)))
+    
+    mean_data = sum(means * voxels)/sum(voxels), voxels
+
+    variances = []
+    for file in tqdm(os.listdir(image_dir)):
+        img_id = file.split('-')[0]
+        img_path = f"{args.data_dir}/raw/{args.split}/images/{img_id}-image.nii.gz"
+        img_data, _ = read_image(img_path)
+        variances.append(np.mean((img_data - mean_data)**2, axis=0))
+
+    variances_weightedmean = sum(variances * voxels)/sum(voxels)
+
+    std = np.sqrt(variances_weightedmean)
+    epsilon = 0.0000001
+
+    for file in tqdm(os.listdir(image_dir)):
+        img_data = (img_data - mean_data) / (std + epsilon)
+    
+    #Now write it into a nice file that we can store.
+
+def normalize_minmax(volume):
+    """
+        Normalize the volume to be in the range [0, 1]
+
+        volume: np.array
+    """
+    min_value = volume.min()
+    max_value = volume.max()
+    return (volume - min_value) / (max_value - min_value)
 
 def normalize_minmax(volume):
     """
@@ -59,7 +111,7 @@ def simplify_labels(labels):
     labels[labels != 0] = 1
     return labels
 
-def extrapolate_bones(volume):
+def clipping_bones(volume):
     """
         Remove low intensity voxels below intensity 200
 
