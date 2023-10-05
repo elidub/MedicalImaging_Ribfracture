@@ -139,4 +139,4 @@ logs/test
 data_boxes/
 src/misc/post.py
 jobs/slurm/
-logs/
+# logs/
