@@ -94,16 +94,6 @@ def normalize_minmax(volume):
     max_value = volume.max()
     return (volume - min_value) / (max_value - min_value)
 
-def normalize_minmax(volume):
-    """
-        Normalize the volume to be in the range [0, 1]
-
-        volume: np.array
-    """
-    min_value = volume.min()
-    max_value = volume.max()
-    return (volume - min_value) / (max_value - min_value)
-
 def simplify_labels(labels):
     """
         Project all label annotations which are not 0 to 1.
