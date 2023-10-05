@@ -53,7 +53,7 @@ def extract_boxes(img_data, annot_data):
         annot_box.append(annot_patch)
         img_box.append(img_patch)
 
-    return np.array(img_box), np.array(annot_box)
+    return img_box, annot_box
 
 
 def extract_boxes_from_patches(img_patches, annot_patches):
@@ -66,5 +66,5 @@ def extract_boxes_from_patches(img_patches, annot_patches):
         img_boxes.append(img_box)
         annot_boxes.append(annot_box)
 
-    return np.array(img_boxes), np.array(annot_boxes)
+    return img_boxes, annot_boxes
 
