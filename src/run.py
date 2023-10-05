@@ -2,6 +2,8 @@ import argparse, sys
 import lightning.pytorch as pl
 import torch
 from matplotlib import pyplot as plt
+import os
+import pickle
 
 sys.path.insert(1, sys.path[0] + '/..')
 from src.data.datamodule import DataModule
@@ -10,6 +12,9 @@ from src.misc.utils import set_seed_and_precision
 
 def parse_option(notebook = False):
     parser = argparse.ArgumentParser(description="RibFrac")
+
+    parser.add_argument('--train', action='store_true', help='Train model')
+    parser.add_argument('--predict', action='store_true', help='Predict model')
 
     # Model
     parser.add_argument('--net', type=str, default='unet3d', help='Network architecture')
@@ -20,10 +25,10 @@ def parse_option(notebook = False):
     # Training 
     parser.add_argument('--max_epochs', type=int, default=3, help='Max number of training epochs')
     parser.add_argument('--num_workers', type=int, default=0, help='Number of workers for dataloader')
-    parser.add_argument('--batch_size', type=int, default=2, help='Batch size')
+    parser.add_argument('--batch_size', type=int, default=3, help='Batch size')
 
     # Logging
-    parser.add_argument('--ckpt_path', type=str, default='test', help='Path to save checkpoint')
+    parser.add_argument('--log_dir', type=str, default='../logs', help='Path to save logs')
     parser.add_argument('--version', default='version_0', help='Version of the model to load')
 
     # Misc
@@ -33,15 +38,16 @@ def parse_option(notebook = False):
     return args
 
 def main(args):
+    assert args.train is not args.predict, 'Must train or predict'
     set_seed_and_precision(args)
 
     datamodule = DataModule(dir = args.data_dir, dataset = args.dataset, 
                             splits = args.splits,
                             num_workers=args.num_workers, batch_size=args.batch_size)
-    model = setup_model(net = args.net)
+    model = setup_model(args)
 
     trainer = pl.Trainer(
-        logger = pl.loggers.TensorBoardLogger('../logs', name = 'test', version = args.version),
+        logger = pl.loggers.TensorBoardLogger(args.log_dir, name = args.net, version = args.version),
         max_epochs=args.max_epochs,
         log_every_n_steps=1,
         accelerator = 'gpu' if torch.cuda.is_available() else 'cpu',
@@ -51,7 +57,15 @@ def main(args):
         deterministic = False, # Set to False for max_pool3d_with_indices_backward_cuda
     )
 
-    trainer.fit(model,  datamodule=datamodule)
+    if args.train:
+        trainer.fit(model,  datamodule=datamodule)
+    elif args.predict:
+        preds = trainer.predict(model, datamodule=datamodule) # i think this is a (list [#batches], tuple [prediction ???], tensor [batchsize, x, y, z]) 
+        pred_dir = os.path.join(args.log_dir, args.net, args.version)
+        # save preds in pred_dir as pickle
+        with open(os.path.join(pred_dir, 'preds.pkl'), 'wb') as f:
+            pickle.dump(preds, f)
+
 
 if __name__ == "__main__":
     args = parse_option()
