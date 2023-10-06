@@ -315,7 +315,7 @@ class RetinaNet3D(nn.Module):
         self,
         in_channels,
         feature_size=256,
-        num_classes=10,
+        num_classes=1,
         num_anchors=30,
         backbone="resnet18",
     ):

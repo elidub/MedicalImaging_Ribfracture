@@ -63,9 +63,9 @@ class RetinanetLearner(pl.LightningModule):
 
     def forward(self, batch):
         x, y_box, y_cls = batch
-        x, y_box, y_Cls = x.float(), y_box.float(), y_cls.float()
+        x, y_box, y_cls = x.float(), y_box.float(), y_cls.long()
         y_box_hat, y_cls_hat = self.net(x)
-
+        
         return y_box_hat, y_cls_hat, y_box, y_cls
 
     def step(self, batch, mode="train"):
