@@ -1,7 +1,7 @@
 import torch
-from torch import nn
-from torch.nn.functional import one_hot, cross_entropy
+import torch.nn as nn
 
+from torch.nn.functional import one_hot, cross_entropy
 from src.model.anchors import Anchors3D, match_anchor_boxes
 
 
