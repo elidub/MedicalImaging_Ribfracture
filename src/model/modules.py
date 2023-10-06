@@ -70,9 +70,9 @@ class BoxLabelDecoder:
     def __init__(
         self,
         num_channels=1,
-        volume_width=64,
-        volume_height=64,
-        volume_depth=64,
+        volume_width=128,
+        volume_height=128,
+        volume_depth=128,
         box_variance=[0.1, 0.1, 0.1, 0.2, 0.2, 0.2],
     ):
         get_anchors = Anchors3D()

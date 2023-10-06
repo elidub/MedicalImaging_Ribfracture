@@ -316,7 +316,7 @@ class RetinaNet3D(nn.Module):
         in_channels,
         feature_size=256,
         num_classes=1,
-        num_anchors=30,
+        num_anchors=15,
         backbone="resnet18",
     ):
         super().__init__()

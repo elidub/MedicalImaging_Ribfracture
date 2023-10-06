@@ -34,15 +34,14 @@ class DataModule(pl.LightningDataModule):
         self.datasets = { split : dataset(split = split, dir=self.dir) for split in self.splits }
 
     def patches_collate(self, batch):
-        x, y_box, y_cls = zip(*batch)
+        x, y_box, y_cls, info = zip(*batch)
 
-        max_len = max([len(y) for y in y_box])
-        max_len = max(max_len, 1)
+        max_len = 561720
 
         y_box = [torch.cat((y, torch.zeros(max_len - len(y), 6))) for y in y_box]
-        y_cls = [torch.cat((y, torch.zeros(max_len - len(y), 1))) for y in y_cls]
+        y_cls = [torch.cat((y, torch.zeros(max_len - len(y)))) for y in y_cls]
 
-        return torch.stack(x), torch.stack(y_box), torch.stack(y_cls)
+        return torch.stack(x), torch.stack(y_box), torch.stack(y_cls), info
 
     def custom_collate(self, batch):
         x, y = zip(*batch)  # Separate data and labels
@@ -58,5 +57,5 @@ class DataModule(pl.LightningDataModule):
         return DataLoader(self.datasets['test'], batch_size=self.batch_size, shuffle=False, num_workers=self.num_workers, collate_fn = self.collate_fn)
     
     def predict_dataloader(self):
-        return DataLoader(self.datasets['predict'], batch_size=self.batch_size, shuffle=False, num_workers=self.num_workers, collate_fn = self.collate_fn)
+        return DataLoader(self.datasets['train'], batch_size=self.batch_size, shuffle=False, num_workers=self.num_workers, collate_fn = self.collate_fn)
     

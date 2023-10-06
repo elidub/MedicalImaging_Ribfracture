@@ -5,6 +5,7 @@ import lightning.pytorch as pl
 
 sys.path.insert(1, sys.path[0] + "/..")
 from src.data.utils import crop
+from src.model.modules import BoxLabelDecoder
 
 
 class Learner(pl.LightningModule):
@@ -60,17 +61,18 @@ class RetinanetLearner(pl.LightningModule):
         super().__init__()
         self.net = net
         self.loss = loss
+        self.decoder = BoxLabelDecoder()
 
     def forward(self, batch):
-        x, y_box, y_cls = batch
+        x, y_box, y_cls, info = batch
         x, y_box, y_cls = x.float(), y_box.float(), y_cls.long()
         y_box_hat, y_cls_hat = self.net(x)
-        
-        return y_box_hat, y_cls_hat, y_box, y_cls
+
+        return y_box_hat, y_cls_hat, y_box, y_cls, info
 
     def step(self, batch, mode="train"):
         # Forward pass
-        y_box_hat, y_cls_hat, y_box, y_cls = self.forward(batch)
+        y_box_hat, y_cls_hat, y_box, y_cls, _ = self.forward(batch)
 
         # Loss
         box_loss, cls_loss = self.loss(y_box_hat, y_cls_hat, y_box, y_cls)
@@ -92,6 +94,18 @@ class RetinanetLearner(pl.LightningModule):
 
     def test_step(self, batch, batch_idx):
         loss, y_box_hat, y_cls_hat = self.step(batch, "test")
+
+    def predict_step(self, batch, batch_idx):
+        y_box_hat, y_cls_hat, _, _, info = self.forward(batch)
+        y_box_hat, y_cls_hat = self.decoder.decode(y_box_hat, y_cls_hat)
+
+        y_cls_hat_idx = y_cls_hat.argmax(dim=-1)
+
+        boxes_res = []
+        for i, boxes in enumerate(y_box_hat):
+            boxes_res.append(boxes[y_cls_hat_idx[i] == 2].long())
+
+        return boxes_res, info
 
     def configure_optimizers(self):
         optimizer = torch.optim.Adam(self.parameters(), lr=0.0001)
