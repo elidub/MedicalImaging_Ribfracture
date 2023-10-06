@@ -13,7 +13,7 @@ def setup_model(args):
         loss = nn.CrossEntropyLoss()
         learner = Learner
     elif net == "retinanet":
-        net = RetinaNet()
+        net = RetinaNet3D()
         loss = RetinaNetLoss()
         learner = RetinanetLearner
     elif net == "unet3d":
