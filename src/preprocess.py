@@ -70,9 +70,9 @@ def main(args):
         img_path = f"{args.data_dir}/raw/{args.split}/images/{img_id}-image.nii.gz"
         label_path = f"{args.data_dir}/raw/{args.split}/labels/{img_id}-label.nii.gz"
         img_data, _ = read_image(img_path)
-        img_data = clip_values(img_data, -200, 500)
+        img_data = clip_values(img_data, -200, 1000)
         # img_data = clipping_bones(img_data)
-        img_data = normalize_minmax(img_data)
+        img_data = normalize_minmax(img_data, -200, 1000)
         img_patches = patch_volume(img_data, args.patch_size)
         np.save(os.path.join(patch_dir, args.split, 'images', f'{img_id}.npy'), img_patches)
         if args.split != 'test':
