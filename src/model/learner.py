@@ -100,6 +100,9 @@ class RetinanetLearner(pl.LightningModule):
         y_box_hat, y_cls_hat = self.decoder.decode(y_box_hat, y_cls_hat)
 
         y_cls_hat_idx = y_cls_hat.argmax(dim=-1)
+        y_cls_hat_idx = torch.zeros_like(y_cls_hat_idx)
+
+        y_cls_hat_idx[:, :5] = 2
 
         boxes_res = []
         for i, boxes in enumerate(y_box_hat):
