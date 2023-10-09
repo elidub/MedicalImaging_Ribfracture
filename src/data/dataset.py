@@ -82,6 +82,7 @@ class BoxesDataset(torch.utils.data.Dataset):
             self.y_path = os.path.join(self.split_dir, "labels")
         for file in os.listdir(x_path):
             patches = os.listdir(os.path.join(x_path, file))
+            patches = [patch for patch in patches if patch != "metadata.csv"]
             for patch in patches:
                 boxes = os.listdir(os.path.join(x_path, file, patch))
                 for box in boxes:
