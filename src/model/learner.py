@@ -96,7 +96,8 @@ class RetinanetLearner(pl.LightningModule):
         loss, y_box_hat, y_cls_hat = self.step(batch, "test")
 
     def predict_step(self, batch, batch_idx):
-        y_box_hat, y_cls_hat, _, _, info = self.forward(batch)
+        with torch.no_grad():
+            y_box_hat, y_cls_hat, _, _, info = self.forward(batch)
         y_box_hat, y_cls_hat = self.decoder.decode(y_box_hat, y_cls_hat)
 
         y_cls_hat_idx = y_cls_hat.argmax(dim=-1)
