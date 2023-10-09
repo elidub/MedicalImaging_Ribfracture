@@ -1,25 +1,35 @@
-from torch import nn
 import os
+import torch.nn as nn
 
-from src.model.models import DummyNetwork, UNet3D
-from src.model.learner import Learner
+from src.model.modules import RetinaNetLoss
+from src.model.learner import Learner, RetinanetLearner
+from src.model.models import DummyNetwork, RetinaNet3D, UNet3D
+
 
 def setup_model(args):
     net = args.net
-    if net == 'dummy':
+    if net == "dummy":
         net = DummyNetwork()
         loss = nn.CrossEntropyLoss()
-    elif net == 'unet3d':
+        learner = Learner
+    elif net == "retinanet":
+        net = RetinaNet3D(in_channels=1)
+        loss = RetinaNetLoss()
+        learner = RetinanetLearner
+    elif net == "unet3d":
         net = UNet3D(1, 1)
         loss = nn.BCELoss()
+        learner = Learner
     else:
-        raise ValueError('Invalid network type')
-    
+        raise ValueError("Invalid network type")
+
     if args.train:
-        model = Learner(net, loss)
+        model = learner(net, loss)
     elif args.predict:
-        ckpt_path = os.path.join(args.log_dir, args.net, args.version, 'checkpoints')
+        ckpt_path = os.path.join(args.log_dir, args.net, args.version, "checkpoints")
         ckpt = os.listdir(ckpt_path)[0]
-        model = Learner.load_from_checkpoint(os.path.join(ckpt_path, ckpt), net = net, loss = loss)
+        model = learner.load_from_checkpoint(
+            os.path.join(ckpt_path, ckpt), net=net, loss=loss
+        )
 
     return model

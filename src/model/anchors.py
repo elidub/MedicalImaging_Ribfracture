@@ -4,6 +4,7 @@ Mostly copy-paste from https://keras.io/examples/vision/retinanet/
 Few modifications made for handling 3D anchors
 """
 
+import math
 import torch
 import torch.nn as nn
 
@@ -126,9 +127,9 @@ class Anchors3D(nn.Module):
 
         anchors = [
             self._get_anchors(
-                torch.math.ceil(image_height / 2**i),
-                torch.math.ceil(image_width / 2**i),
-                torch.math.ceil(image_depth / 2**i),
+                math.ceil(image_height / 2**i),
+                math.ceil(image_width / 2**i),
+                math.ceil(image_depth / 2**i),
                 i,
             )
             for i in range(2, 7)

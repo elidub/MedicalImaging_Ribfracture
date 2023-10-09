@@ -6,7 +6,7 @@ import csv
 from data.dataset import read_image
 from data.patcher import patch_volume
 from data.seg2box import extract_boxes_from_patches
-from data.utils import normalize_standard, normalize_minmax, simplify_labels, extrapolate_bones, clip_values
+from data.utils import normalize_standard, normalize_minmax, simplify_labels, clip_values
 
 
 def save_boxes(img_boxes, label_boxes, img_id, box_dir):
@@ -81,7 +81,7 @@ def main(args):
             np.save(os.path.join(patch_dir, args.split, 'labels', f'{img_id}.npy'), label_patches)
             img_boxes, label_boxes, bounding_boxes_in_patch = extract_boxes_from_patches(img_patches, label_patches)
             save_boxes(img_boxes, label_boxes, img_id, box_dir)
-            # save_metadata(bounding_boxes_in_patch, img_id, box_dir, args.split)
+            save_metadata(bounding_boxes_in_patch, img_id, box_dir, args.split)
             
 
 if __name__ == '__main__':
