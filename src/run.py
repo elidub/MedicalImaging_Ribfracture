@@ -123,9 +123,10 @@ def main(args):
                             os.path.join(args.data_dir, "patches", split, "images", file)
                         )[info["patch"]]
 
-                        patch_lab = np.load(
-                            os.path.join(args.data_dir, "patches", split, "labels", file)
-                        )[info["patch"]]
+                        if split != "test":
+                            patch_lab = np.load(
+                                os.path.join(args.data_dir, "patches", split, "labels", file)
+                            )[info["patch"]]
 
                         for box in boxes:
                             res_img = patch_img[
@@ -134,15 +135,17 @@ def main(args):
                                 box[2] : box[2] + box[5],
                             ]
 
-                            res_lab = patch_lab[
-                                box[0] : box[0] + box[3],
-                                box[1] : box[1] + box[4],
-                                box[2] : box[2] + box[5],
-                            ]
+                            if split != "test":
+                                res_lab = patch_lab[
+                                    box[0] : box[0] + box[3],
+                                    box[1] : box[1] + box[4],
+                                    box[2] : box[2] + box[5],
+                                ]
                             
                             box_id = len(os.listdir(patch_dir))
                             np.save(os.path.join(patch_dir, f"box{box_id}.npy"), res_img)
-                            np.save(os.path.join(label_dir, f"box{box_id}.npy"), res_lab)
+                            if split != "test":
+                                np.save(os.path.join(label_dir, f"box{box_id}.npy"), res_lab)
 
 
 if __name__ == "__main__":

@@ -174,6 +174,9 @@ class PatchesDataset(torch.utils.data.Dataset):
                 ).unsqueeze(0)
                 classes = torch.ones((1, boxes.shape[1], 1))
                 boxes, classes = self.label_encoder.encode(boxes, classes)
+            else:
+                boxes = torch.zeros((1, 0, 6))
+                classes = torch.zeros((1, 0))
 
         return (
             torch.tensor(img).unsqueeze(0),
