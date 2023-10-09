@@ -105,9 +105,12 @@ class RetinanetLearner(pl.LightningModule):
 
         y_cls_hat_idx[:, :5] = 2
 
+        y_box_hat = (torch.rand_like(y_box_hat) * 32).long()
+        
         boxes_res = []
         for i, boxes in enumerate(y_box_hat):
             boxes_res.append(boxes[y_cls_hat_idx[i] == 2].long())
+
 
         return boxes_res, info
 

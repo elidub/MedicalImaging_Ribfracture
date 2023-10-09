@@ -82,6 +82,7 @@ class BoxesDataset(torch.utils.data.Dataset):
             self.y_path = os.path.join(self.split_dir, "labels")
         for file in os.listdir(x_path):
             patches = os.listdir(os.path.join(x_path, file))
+            # patches = patches[:2] # SELECT ONLY FIRST TWO PATCHES
             patches = [patch for patch in patches if patch != "metadata.csv"]
             for patch in patches:
                 boxes = os.listdir(os.path.join(x_path, file, patch))
@@ -101,8 +102,9 @@ class BoxesDataset(torch.utils.data.Dataset):
         if self.transform:
             x = self.transform(x)
 
+        x = pad_tensor(x, pad_value=self.pad_value, pad_size=self.pad_size)
         if self.split == "test":
-            return x, -1  # return -1 as dummy label for test set
+            return x, torch.tensor([-1])  # return -1 as dummy label for test set
 
         y = np.load(os.path.join(self.y_path, box))
         y = torch.from_numpy(y)
@@ -110,7 +112,6 @@ class BoxesDataset(torch.utils.data.Dataset):
         if self.target_transform:
             y = self.target_transform(y)
 
-        x = pad_tensor(x, pad_value=self.pad_value, pad_size=self.pad_size)
         y = pad_tensor(y, pad_value=self.pad_value, pad_size=self.pad_size)
 
         return x, y

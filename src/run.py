@@ -104,7 +104,7 @@ def main(args):
                     pickle.dump(preds, f)
 
             elif args.net == "retinanet":
-                data_dir = os.path.join(pred_dir, split)
+                data_dir = os.path.join(pred_dir, 'boxes', split)
                 if os.path.exists(data_dir):
                     shutil.rmtree(data_dir)
                 os.makedirs(data_dir)
