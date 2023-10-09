@@ -158,21 +158,22 @@ class PatchesDataset(torch.utils.data.Dataset):
             pat_idx
         ]
 
-        label_data = pd.read_csv(
-            os.path.join(self.lab_dir, self.idx_to_file[img_idx], "metadata.csv")
-        )
+        boxes = torch.zeros((1, 0, 6))
+        classes = torch.zeros((1, 0))
 
-        boxes = label_data[label_data["patch_id"].astype(int) == pat_idx]
+        if self.split != "test":
+            label_data = pd.read_csv(
+                os.path.join(self.lab_dir, self.idx_to_file[img_idx], "metadata.csv")
+            )
 
-        if len(boxes) != 0:
-            boxes = torch.tensor(
-                boxes[["x", "y", "z", "width", "height", "depth"]].to_numpy()
-            ).unsqueeze(0)
-            classes = torch.ones((1, boxes.shape[1], 1))
-            boxes, classes = self.label_encoder.encode(boxes, classes)
-        else:
-            boxes = torch.zeros((1, 0, 6))
-            classes = torch.zeros((1, 0))
+            boxes = label_data[label_data["patch_id"].astype(int) == pat_idx]
+
+            if len(boxes) != 0:
+                boxes = torch.tensor(
+                    boxes[["x", "y", "z", "width", "height", "depth"]].to_numpy()
+                ).unsqueeze(0)
+                classes = torch.ones((1, boxes.shape[1], 1))
+                boxes, classes = self.label_encoder.encode(boxes, classes)
 
         return (
             torch.tensor(img).unsqueeze(0),
