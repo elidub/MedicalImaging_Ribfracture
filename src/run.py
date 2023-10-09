@@ -15,6 +15,15 @@ from src.model.setup import setup_model
 from src.misc.utils import set_seed_and_precision
 
 
+def find_npy_files(directory):
+    npy_files = []
+    for root, dirs, files in os.walk(directory):
+        for file in files:
+            if file.endswith(".npy"):
+                npy_files.append(os.path.join(root, file))
+    return sorted(npy_files)
+
+
 def parse_option(notebook=False):
     parser = argparse.ArgumentParser(description="RibFrac")
 
@@ -100,11 +109,39 @@ def main(args):
             )  # i think this is a (list [#batches], tuple [prediction ???], tensor [batchsize, x, y, z])
 
             pred_dir = os.path.join(args.log_dir, args.net, args.version)
-            if args.net == "unet3d":
 
-                # save preds in pred_dir as pickle
-                with open(os.path.join(pred_dir, "preds.pkl"), "wb") as f:
-                    pickle.dump(preds, f)
+
+            if args.net == "unet3d":
+                data_dir = os.path.join(pred_dir, 'segmentations', split)
+                if os.path.exists(data_dir):
+                    shutil.rmtree(data_dir)
+                os.makedirs(data_dir)
+
+                # Recreate directory structure and dumy npy files
+                for img_id in sorted(os.listdir(os.path.join(args.data_dir, "boxes", split, "images"))):
+                    os.makedirs(os.path.join(data_dir, img_id))
+                    for patch in sorted(os.listdir(os.path.join(args.data_dir, "boxes", split, "images", img_id))):
+                        if patch != "metadata.csv":
+                            os.makedirs(os.path.join(data_dir, img_id, patch))
+                            num_boxes_in_patch = len(
+                                sorted(os.listdir(os.path.join(args.data_dir, "boxes", split, "images", img_id, patch)))
+                                )
+                            for i in range(num_boxes_in_patch):
+                                np.save(os.path.join(data_dir, img_id, patch, f"box{i}.npy"), np.zeros(1))
+                        # copy metadata.csv
+                        else:
+                            shutil.copy(
+                                os.path.join(args.data_dir, "boxes", split, "images", img_id, patch),
+                                os.path.join(data_dir, img_id, patch)
+                                )
+
+                # Save predictions to npy files
+                npy_files = find_npy_files(os.path.join(args.data_dir, "boxes", split, "images"))
+                for batch in preds:
+                    batch_segs, _ = batch
+                    for seg in batch_segs:
+                        np.save(npy_files.pop(0), seg)
+
 
             elif args.net == "retinanet":
                 data_dir = os.path.join(pred_dir, 'boxes', split)
