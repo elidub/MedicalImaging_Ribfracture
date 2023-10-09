@@ -1,0 +1,18 @@
+#!/bin/bash
+
+#SBATCH --partition=gpu
+#SBATCH --gres=gpu:1
+#SBATCH --job-name=Preprocess
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=3
+#SBATCH --time=08:00:00
+#SBATCH --mem=32000M
+#SBATCH --output=jobs/slurm/preprocess_and_train_unet_%A.out
+
+cd ~/AIMedicalImaging/src
+
+python preprocess.py --split val
+python preprocess.py --split train
+# python preprocess.py --split test
+
+python run.py --train --net unet3d --data_dir ../data --dataset boxes --splits train val 

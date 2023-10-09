@@ -1,3 +1,8 @@
+# Own notes
+```
+python run.py --train --net unet3d --data_dir ../data --dataset boxes --splits train val 
+```
+
 # RibFrac-Challenge
 
 Evaluation scripts for [MICCAI 2020 RibFrac Challenge: Rib Fracture Detection and Classification](https://ribfrac.grand-challenge.org/).

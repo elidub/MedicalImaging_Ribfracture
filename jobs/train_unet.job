@@ -12,6 +12,4 @@
 # cd /scratch-shared/ribfrac
 cd /~/AIMedicalImaging/src
 
-# python preprocess.py --split val
-python preprocess.py --split train
-# python preprocess.py --split test
+python run.py --train --net unet3d --data_dir ../data --dataset boxes --splits train val 
