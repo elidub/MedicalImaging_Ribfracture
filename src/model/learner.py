@@ -71,6 +71,10 @@ class RetinanetLearner(pl.LightningModule):
         return y_box_hat, y_cls_hat, y_box, y_cls, info
 
     def step(self, batch, mode="train"):
+        # Discard batch if no object is present
+        if mode == "train" and not (batch[2] > 1).any():
+            return None, None, None
+
         # Forward pass
         y_box_hat, y_cls_hat, y_box, y_cls, _ = self.forward(batch)
 
@@ -96,21 +100,14 @@ class RetinanetLearner(pl.LightningModule):
         loss, y_box_hat, y_cls_hat = self.step(batch, "test")
 
     def predict_step(self, batch, batch_idx):
-        with torch.no_grad():
-            y_box_hat, y_cls_hat, _, _, info = self.forward(batch)
+        y_box_hat, y_cls_hat, _, _, info = self.forward(batch)
         y_box_hat, y_cls_hat = self.decoder.decode(y_box_hat, y_cls_hat)
 
         y_cls_hat_idx = y_cls_hat.argmax(dim=-1)
-        y_cls_hat_idx = torch.zeros_like(y_cls_hat_idx)
 
-        y_cls_hat_idx[:, :5] = 2
-
-        y_box_hat = (torch.rand_like(y_box_hat) * 32).long()
-        
         boxes_res = []
         for i, boxes in enumerate(y_box_hat):
             boxes_res.append(boxes[y_cls_hat_idx[i] == 2].long())
-
 
         return boxes_res, info
 
