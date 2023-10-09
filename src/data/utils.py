@@ -21,7 +21,7 @@ def pad_list(x_unpadded, padding_value = 0, size = 64):
         ), value = padding_value) for x in x_unpadded])
 
 def pad_tensor(x_unpadded, pad_value = 0, pad_size = 64):
-    x = x_unpadded
+    x = x_unpadded[:pad_size, :pad_size, :pad_size]
     return nn.functional.pad(x, (
             0, pad_size - x.shape[-1],
             0, pad_size - x.shape[-2], 
