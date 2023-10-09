@@ -89,15 +89,17 @@ def normalize_dir(image_dir, args):
         #Now write it into a nice file that we can store.
         
 
-def normalize_minmax(volume):
+def normalize_minmax(volume, min_value, max_value):
     """
         Normalize the volume to be in the range [0, 1]
 
         volume: np.array
     """
-    min_value = volume.min()
-    max_value = volume.max()
-    return (volume - min_value) / (max_value - min_value)
+    # min_value = volume.min()
+    # max_value = volume.max()
+    volume = (volume - min_value) / (max_value - min_value)
+    volume = volume * 2 - 1
+    return volume
 
 def simplify_labels(labels):
     """
