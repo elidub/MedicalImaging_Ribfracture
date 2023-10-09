@@ -90,8 +90,11 @@ def main(args):
         trainer.fit(model, datamodule=datamodule)
     elif args.predict:
         for split in args.splits:
+            dataloader = f"{split}_dataloader"
+            if split == "train":
+                dataloader = f"{split}_no_shuffle_dataloader"
+            datamodule.predict_dataloader = getattr(datamodule, dataloader, "predict_dataloader")
 
-            datamodule.predict_dataloader = getattr(datamodule, f"{split}_dataloader", "predict_dataloader")
             preds = trainer.predict(
                 model, datamodule = datamodule
             )  # i think this is a (list [#batches], tuple [prediction ???], tensor [batchsize, x, y, z])

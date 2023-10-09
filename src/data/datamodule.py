@@ -5,11 +5,19 @@ import lightning.pytorch as pl
 from torchvision.transforms import ToTensor
 from torch.utils.data import Dataset, DataLoader
 
-sys.path.insert(1, sys.path[0] + '/..')
+sys.path.insert(1, sys.path[0] + "/..")
 from src.data.dataset import CustomImageDataset, PatchesDataset, BoxesDataset
 
+
 class DataModule(pl.LightningDataModule):
-    def __init__(self, dir, dataset = 'images', batch_size = 2, num_workers = 0, splits = ['train', 'val', 'test']):
+    def __init__(
+        self,
+        dir,
+        dataset="images",
+        batch_size=2,
+        num_workers=0,
+        splits=["train", "val", "test"],
+    ):
         super().__init__()
         self.dir = dir
         self.dataset = dataset
@@ -18,20 +26,21 @@ class DataModule(pl.LightningDataModule):
         self.splits = splits
 
     def setup(self, stage=None):
-
-        if self.dataset == 'images':
+        if self.dataset == "images":
             dataset = CustomImageDataset
             self.collate_fn = None
         elif self.dataset == "patches":
             dataset = PatchesDataset
             self.collate_fn = self.patches_collate
-        elif self.dataset == 'boxes':
+        elif self.dataset == "boxes":
             dataset = BoxesDataset
             self.collate_fn = self.custom_collate
         else:
-            raise ValueError('Unknown dataset type')
-        
-        self.datasets = { split : dataset(split = split, dir=self.dir) for split in self.splits }
+            raise ValueError("Unknown dataset type")
+
+        self.datasets = {
+            split: dataset(split=split, dir=self.dir) for split in self.splits
+        }
 
     def patches_collate(self, batch):
         x, y_box, y_cls, info = zip(*batch)
@@ -48,14 +57,46 @@ class DataModule(pl.LightningDataModule):
         return torch.stack(x), torch.stack(y)
 
     def train_dataloader(self):
-        return DataLoader(self.datasets['train'], batch_size=self.batch_size, shuffle=True, num_workers=self.num_workers, collate_fn = self.collate_fn)
+        return DataLoader(
+            self.datasets["train"],
+            batch_size=self.batch_size,
+            shuffle=True,
+            num_workers=self.num_workers,
+            collate_fn=self.collate_fn,
+        )
+
+    def train_no_shuffle_dataloader(self):
+        return DataLoader(
+            self.datasets["train"],
+            batch_size=self.batch_size,
+            shuffle=False,
+            num_workers=self.num_workers,
+            collate_fn=self.collate_fn,
+        )
 
     def val_dataloader(self):
-        return DataLoader(self.datasets['val'], batch_size=self.batch_size, shuffle=False, num_workers=self.num_workers, collate_fn = self.collate_fn)
+        return DataLoader(
+            self.datasets["val"],
+            batch_size=self.batch_size,
+            shuffle=False,
+            num_workers=self.num_workers,
+            collate_fn=self.collate_fn,
+        )
 
     def test_dataloader(self):
-        return DataLoader(self.datasets['test'], batch_size=self.batch_size, shuffle=False, num_workers=self.num_workers, collate_fn = self.collate_fn)
-    
+        return DataLoader(
+            self.datasets["test"],
+            batch_size=self.batch_size,
+            shuffle=False,
+            num_workers=self.num_workers,
+            collate_fn=self.collate_fn,
+        )
+
     def predict_dataloader(self):
-        return DataLoader(self.datasets['train'], batch_size=self.batch_size, shuffle=False, num_workers=self.num_workers, collate_fn = self.collate_fn)
-    
+        return DataLoader(
+            self.datasets["train"],
+            batch_size=self.batch_size,
+            shuffle=False,
+            num_workers=self.num_workers,
+            collate_fn=self.collate_fn,
+        )
