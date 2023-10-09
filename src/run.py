@@ -89,56 +89,60 @@ def main(args):
     if args.train:
         trainer.fit(model, datamodule=datamodule)
     elif args.predict:
-        preds = trainer.predict(
-            model, datamodule=datamodule
-        )  # i think this is a (list [#batches], tuple [prediction ???], tensor [batchsize, x, y, z])
+        for split in args.splits:
 
-        if args.net == "unet3d":
+            datamodule.predict_dataloader = getattr(datamodule, f"{split}_dataloader", "predict_dataloader")
+            preds = trainer.predict(
+                model, datamodule = datamodule
+            )  # i think this is a (list [#batches], tuple [prediction ???], tensor [batchsize, x, y, z])
+
             pred_dir = os.path.join(args.log_dir, args.net, args.version)
+            if args.net == "unet3d":
 
-            # save preds in pred_dir as pickle
-            with open(os.path.join(pred_dir, "preds.pkl"), "wb") as f:
-                pickle.dump(preds, f)
-        elif args.net == "retinanet":
-            data_dir = os.path.join(args.data_dir, "retinanet_boxes", "train")
-            if os.path.exists(data_dir):
-                shutil.rmtree(data_dir)
-            os.makedirs(data_dir)
+                # save preds in pred_dir as pickle
+                with open(os.path.join(pred_dir, "preds.pkl"), "wb") as f:
+                    pickle.dump(preds, f)
 
-            for batch in preds:
-                batch_boxes, batch_infos = batch
-                for boxes, info in zip(batch_boxes, batch_infos):
-                    patch = f"patch{info['patch']}"
-                    patch_dir = os.path.join(data_dir, "images", info["file"], patch)
-                    label_dir = os.path.join(data_dir, "labels", info["file"], patch)
-                    os.makedirs(patch_dir)
-                    os.makedirs(label_dir)
+            elif args.net == "retinanet":
+                data_dir = os.path.join(pred_dir, split)
+                if os.path.exists(data_dir):
+                    shutil.rmtree(data_dir)
+                os.makedirs(data_dir)
 
-                    file = f"{info['file']}.npy"
-                    patch_img = np.load(
-                        os.path.join(args.data_dir, "patches", "train", "images", file)
-                    )[info["patch"]]
+                for batch in preds:
+                    batch_boxes, batch_infos = batch
+                    for boxes, info in zip(batch_boxes, batch_infos):
+                        patch = f"patch{info['patch']}"
+                        patch_dir = os.path.join(data_dir, "images", info["file"], patch)
+                        label_dir = os.path.join(data_dir, "labels", info["file"], patch)
+                        os.makedirs(patch_dir)
+                        os.makedirs(label_dir)
 
-                    patch_lab = np.load(
-                        os.path.join(args.data_dir, "patches", "train", "labels", file)
-                    )[info["patch"]]
+                        file = f"{info['file']}.npy"
+                        patch_img = np.load(
+                            os.path.join(args.data_dir, "patches", split, "images", file)
+                        )[info["patch"]]
 
-                    for box in boxes:
-                        res_img = patch_img[
-                            box[0] : box[0] + box[3],
-                            box[1] : box[1] + box[4],
-                            box[2] : box[2] + box[5],
-                        ]
+                        patch_lab = np.load(
+                            os.path.join(args.data_dir, "patches", split, "labels", file)
+                        )[info["patch"]]
 
-                        res_lab = patch_lab[
-                            box[0] : box[0] + box[3],
-                            box[1] : box[1] + box[4],
-                            box[2] : box[2] + box[5],
-                        ]
-                        
-                        box_id = len(os.listdir(patch_dir))
-                        np.save(os.path.join(patch_dir, f"box{box_id}.npy"), res_img)
-                        np.save(os.path.join(label_dir, f"box{box_id}.npy"), res_lab)
+                        for box in boxes:
+                            res_img = patch_img[
+                                box[0] : box[0] + box[3],
+                                box[1] : box[1] + box[4],
+                                box[2] : box[2] + box[5],
+                            ]
+
+                            res_lab = patch_lab[
+                                box[0] : box[0] + box[3],
+                                box[1] : box[1] + box[4],
+                                box[2] : box[2] + box[5],
+                            ]
+                            
+                            box_id = len(os.listdir(patch_dir))
+                            np.save(os.path.join(patch_dir, f"box{box_id}.npy"), res_img)
+                            np.save(os.path.join(label_dir, f"box{box_id}.npy"), res_lab)
 
 
 if __name__ == "__main__":
