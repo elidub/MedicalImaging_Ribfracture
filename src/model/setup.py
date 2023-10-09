@@ -31,5 +31,6 @@ def setup_model(args):
         model = learner.load_from_checkpoint(
             os.path.join(ckpt_path, ckpt), net=net, loss=loss
         )
+        model = model.eval()
 
     return model
