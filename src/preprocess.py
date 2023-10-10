@@ -1,8 +1,10 @@
 import os
+
 import argparse
+import csv
 import numpy as np
 from tqdm import tqdm
-import csv
+
 from data.dataset import read_image
 from data.patcher import patch_volume
 from data.seg2box import extract_boxes_from_patches
