@@ -15,13 +15,13 @@ from src.model.setup import setup_model
 from src.misc.utils import set_seed_and_precision
 
 
-def find_npy_files(directory):
-    npy_files = []
+def find_npz_files(directory):
+    npz_files = []
     for root, dirs, files in os.walk(directory):
         for file in files:
-            if file.endswith(".npy"):
-                npy_files.append(os.path.join(root, file))
-    return sorted(npy_files)
+            if file.endswith(".npz"):
+                npz_files.append(os.path.join(root, file))
+    return sorted(npz_files)
 
 
 def parse_option(notebook=False):
@@ -117,7 +117,7 @@ def main(args):
                     shutil.rmtree(data_dir)
                 os.makedirs(data_dir)
 
-                # Recreate directory structure and dumy npy files
+                # Recreate directory structure and dumy npz files
                 for img_id in sorted(
                     os.listdir(os.path.join(args.data_dir, "boxes", split, "images"))
                 ):
@@ -146,9 +146,9 @@ def main(args):
                                 )
                             )
                             for i in range(num_boxes_in_patch):
-                                np.save(
+                                np.savez_compressed(
                                     os.path.join(
-                                        data_dir, img_id, patch, f"box{i}.npy"
+                                        data_dir, img_id, patch, f"box{i}.npz"
                                     ),
                                     np.zeros(1),
                                 )
@@ -166,14 +166,14 @@ def main(args):
                                 os.path.join(data_dir, img_id, patch),
                             )
 
-                # Save predictions to npy files
-                npy_files = find_npy_files(
+                # Save predictions to npz files
+                npz_files = find_npz_files(
                     os.path.join(args.data_dir, "boxes", split, "images")
                 )
                 for batch in preds:
                     batch_segs, _ = batch
                     for seg in batch_segs:
-                        np.save(npy_files.pop(0), seg)
+                        np.savez_compressed(npz_files.pop(0), seg)
 
             elif args.net == "retinanet":
                 data_dir = os.path.join(pred_dir, "boxes", split)
@@ -194,7 +194,7 @@ def main(args):
                         os.makedirs(patch_dir)
                         os.makedirs(label_dir)
 
-                        file = f"{info['file']}.npy"
+                        file = f"{info['file']}.npz"
                         patch_img = np.load(
                             os.path.join(
                                 args.data_dir, "patches", split, "images", file
@@ -223,12 +223,12 @@ def main(args):
                                 ]
 
                             box_id = len(os.listdir(patch_dir))
-                            np.save(
-                                os.path.join(patch_dir, f"box{box_id}.npy"), res_img
+                            np.savez_compressed(
+                                os.path.join(patch_dir, f"box{box_id}.npz"), res_img
                             )
                             if split != "test":
-                                np.save(
-                                    os.path.join(label_dir, f"box{box_id}.npy"), res_lab
+                                np.savez_compressed(
+                                    os.path.join(label_dir, f"box{box_id}.npz"), res_lab
                                 )
 
 

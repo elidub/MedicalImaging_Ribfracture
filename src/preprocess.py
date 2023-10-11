@@ -18,12 +18,12 @@ def save_boxes(img_boxes, label_boxes, img_id, box_dir):
             os.makedirs(os.path.join(box_dir, args.split, 'images', img_id, f'patch{i}'), exist_ok=True)
             os.makedirs(os.path.join(box_dir, args.split, 'labels', img_id, f'patch{i}'), exist_ok=True)
             for j in range(len(img_boxes[i])):
-                np.save(
-                    os.path.join(box_dir, args.split, 'images', img_id, f'patch{i}', f'box{j}.npy'),
+                np.savez_compressed(
+                    os.path.join(box_dir, args.split, 'images', img_id, f'patch{i}', f'box{j}.npz'),
                     img_boxes[i][j]
                     )
-                np.save(
-                    os.path.join(box_dir, args.split, 'labels', img_id, f'patch{i}', f'box{j}.npy'),
+                np.savez_compressed(
+                    os.path.join(box_dir, args.split, 'labels', img_id, f'patch{i}', f'box{j}.npz'),
                     label_boxes[i][j]
                     )
                 
@@ -76,11 +76,11 @@ def main(args):
         # img_data = clipping_bones(img_data)
         img_data = normalize_minmax(img_data, -200, 1000)
         img_patches = patch_volume(img_data, args.patch_size)
-        np.save(os.path.join(patch_dir, args.split, 'images', f'{img_id}.npy'), img_patches)
+        np.savez_compressed(os.path.join(patch_dir, args.split, 'images', f'{img_id}.npz'), img_patches)
         if args.split != 'test':
             label_data, _ = read_image(label_path)
             label_patches = patch_volume(label_data, args.patch_size)
-            np.save(os.path.join(patch_dir, args.split, 'labels', f'{img_id}.npy'), label_patches)
+            np.savez_compressed(os.path.join(patch_dir, args.split, 'labels', f'{img_id}.npz'), label_patches)
             img_boxes, label_boxes, bounding_boxes_in_patch = extract_boxes_from_patches(img_patches, label_patches)
             save_boxes(img_boxes, label_boxes, img_id, box_dir)
             save_metadata(bounding_boxes_in_patch, img_id, box_dir, args.split)
