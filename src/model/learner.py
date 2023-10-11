@@ -71,8 +71,9 @@ class RetinanetLearner(pl.LightningModule):
         return y_box_hat, y_cls_hat, y_box, y_cls, info
 
     def step(self, batch, mode="train"):
-        # Discard batch if no object is present
-        if mode == "train" and not (batch[2] > 1).any():
+        indices = [i for i in range(len(batch[-1])) if batch[-1][i]["has_boxes"]]
+
+        if len(indices) == 0:
             return None, None, None
 
         # Forward pass
@@ -112,7 +113,7 @@ class RetinanetLearner(pl.LightningModule):
         return boxes_res, info
 
     def configure_optimizers(self):
-        optimizer = torch.optim.Adam(self.parameters(), lr=0.0001)
+        optimizer = torch.optim.Adam(self.parameters(), lr=0.00001)
         return optimizer
 
     def on_train_epoch_end(self):

@@ -89,8 +89,7 @@ def main(args):
         ),
         max_epochs=args.max_epochs,
         log_every_n_steps=1,
-        # accelerator = 'gpu' if torch.cuda.is_available() else 'cpu',
-        accelerator="cpu",
+        accelerator="gpu" if torch.cuda.is_available() else "cpu",
         callbacks=[pl.callbacks.TQDMProgressBar(refresh_rate=1000)],
         deterministic=False,  # Set to False for max_pool3d_with_indices_backward_cuda
     )
@@ -102,49 +101,82 @@ def main(args):
             dataloader = f"{split}_dataloader"
             if split == "train":
                 dataloader = f"{split}_no_shuffle_dataloader"
-            datamodule.predict_dataloader = getattr(datamodule, dataloader, "predict_dataloader")
+            datamodule.predict_dataloader = getattr(
+                datamodule, dataloader, "predict_dataloader"
+            )
 
             preds = trainer.predict(
-                model, datamodule = datamodule
+                model, datamodule=datamodule
             )  # i think this is a (list [#batches], tuple [prediction ???], tensor [batchsize, x, y, z])
 
             pred_dir = os.path.join(args.log_dir, args.net, args.version)
 
-
             if args.net == "unet3d":
-                data_dir = os.path.join(pred_dir, 'segmentations', split)
+                data_dir = os.path.join(pred_dir, "segmentations", split)
                 if os.path.exists(data_dir):
                     shutil.rmtree(data_dir)
                 os.makedirs(data_dir)
 
                 # Recreate directory structure and dumy npy files
-                for img_id in sorted(os.listdir(os.path.join(args.data_dir, "boxes", split, "images"))):
+                for img_id in sorted(
+                    os.listdir(os.path.join(args.data_dir, "boxes", split, "images"))
+                ):
                     os.makedirs(os.path.join(data_dir, img_id))
-                    for patch in sorted(os.listdir(os.path.join(args.data_dir, "boxes", split, "images", img_id))):
+                    for patch in sorted(
+                        os.listdir(
+                            os.path.join(
+                                args.data_dir, "boxes", split, "images", img_id
+                            )
+                        )
+                    ):
                         if patch != "metadata.csv":
                             os.makedirs(os.path.join(data_dir, img_id, patch))
                             num_boxes_in_patch = len(
-                                sorted(os.listdir(os.path.join(args.data_dir, "boxes", split, "images", img_id, patch)))
+                                sorted(
+                                    os.listdir(
+                                        os.path.join(
+                                            args.data_dir,
+                                            "boxes",
+                                            split,
+                                            "images",
+                                            img_id,
+                                            patch,
+                                        )
+                                    )
                                 )
+                            )
                             for i in range(num_boxes_in_patch):
-                                np.save(os.path.join(data_dir, img_id, patch, f"box{i}.npy"), np.zeros(1))
+                                np.save(
+                                    os.path.join(
+                                        data_dir, img_id, patch, f"box{i}.npy"
+                                    ),
+                                    np.zeros(1),
+                                )
                         # copy metadata.csv
                         else:
                             shutil.copy(
-                                os.path.join(args.data_dir, "boxes", split, "images", img_id, patch),
-                                os.path.join(data_dir, img_id, patch)
-                                )
+                                os.path.join(
+                                    args.data_dir,
+                                    "boxes",
+                                    split,
+                                    "images",
+                                    img_id,
+                                    patch,
+                                ),
+                                os.path.join(data_dir, img_id, patch),
+                            )
 
                 # Save predictions to npy files
-                npy_files = find_npy_files(os.path.join(args.data_dir, "boxes", split, "images"))
+                npy_files = find_npy_files(
+                    os.path.join(args.data_dir, "boxes", split, "images")
+                )
                 for batch in preds:
                     batch_segs, _ = batch
                     for seg in batch_segs:
                         np.save(npy_files.pop(0), seg)
 
-
             elif args.net == "retinanet":
-                data_dir = os.path.join(pred_dir, 'boxes', split)
+                data_dir = os.path.join(pred_dir, "boxes", split)
                 if os.path.exists(data_dir):
                     shutil.rmtree(data_dir)
                 os.makedirs(data_dir)
@@ -153,19 +185,27 @@ def main(args):
                     batch_boxes, batch_infos = batch
                     for boxes, info in zip(batch_boxes, batch_infos):
                         patch = f"patch{info['patch']}"
-                        patch_dir = os.path.join(data_dir, "images", info["file"], patch)
-                        label_dir = os.path.join(data_dir, "labels", info["file"], patch)
+                        patch_dir = os.path.join(
+                            data_dir, "images", info["file"], patch
+                        )
+                        label_dir = os.path.join(
+                            data_dir, "labels", info["file"], patch
+                        )
                         os.makedirs(patch_dir)
                         os.makedirs(label_dir)
 
                         file = f"{info['file']}.npy"
                         patch_img = np.load(
-                            os.path.join(args.data_dir, "patches", split, "images", file)
+                            os.path.join(
+                                args.data_dir, "patches", split, "images", file
+                            )
                         )[info["patch"]]
 
                         if split != "test":
                             patch_lab = np.load(
-                                os.path.join(args.data_dir, "patches", split, "labels", file)
+                                os.path.join(
+                                    args.data_dir, "patches", split, "labels", file
+                                )
                             )[info["patch"]]
 
                         for box in boxes:
@@ -181,11 +221,15 @@ def main(args):
                                     box[1] : box[1] + box[4],
                                     box[2] : box[2] + box[5],
                                 ]
-                            
+
                             box_id = len(os.listdir(patch_dir))
-                            np.save(os.path.join(patch_dir, f"box{box_id}.npy"), res_img)
+                            np.save(
+                                os.path.join(patch_dir, f"box{box_id}.npy"), res_img
+                            )
                             if split != "test":
-                                np.save(os.path.join(label_dir, f"box{box_id}.npy"), res_lab)
+                                np.save(
+                                    os.path.join(label_dir, f"box{box_id}.npy"), res_lab
+                                )
 
 
 if __name__ == "__main__":

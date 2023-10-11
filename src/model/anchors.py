@@ -44,8 +44,7 @@ class Anchors3D(nn.Module):
 
         self._num_anchors = len(self.ratios) * len(self.scales)
         self._strides = [2**i for i in range(2, 7)]
-        # self._volumes = [e**3 for e in [32.0, 64.0, 128.0, 256.0, 512.0]]
-        self._volumes = [e**3 for e in [4.0, 8.0, 16.0, 32.0, 64.0]]
+        self._volumes = [e**3 for e in [32.0, 64.0, 128.0, 256.0, 512.0]]
         self._anchor_dims = self._compute_dims()
 
     def _compute_dims(self):
@@ -134,7 +133,8 @@ class Anchors3D(nn.Module):
 
 
 # def match_anchor_boxes(anchor_boxes, gt_boxes, match_iou=0.5, ignore_iou=0.4):
-def match_anchor_boxes(anchor_boxes, gt_boxes, match_iou=0.001, ignore_iou=0.0001):
+def match_anchor_boxes(anchor_boxes, gt_boxes, match_iou=0.01, ignore_iou=0.005):
+# def match_anchor_boxes(anchor_boxes, gt_boxes, match_iou=0.02, ignore_iou=0.01):
     iou_matrix = pairwise_iou(anchor_boxes, gt_boxes)
 
     max_iou, matched_gt_idx = torch.max(iou_matrix, dim=1, keepdim=False)

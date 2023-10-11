@@ -161,6 +161,7 @@ class PatchesDataset(torch.utils.data.Dataset):
 
         boxes = torch.zeros((1, 0, 6))
         classes = torch.zeros((1, 0))
+        has_boxes = False
 
         if self.split != "test":
             label_data = pd.read_csv(
@@ -173,8 +174,10 @@ class PatchesDataset(torch.utils.data.Dataset):
                 boxes = torch.tensor(
                     boxes[["x", "y", "z", "width", "height", "depth"]].to_numpy()
                 ).unsqueeze(0)
+
                 classes = torch.ones((1, boxes.shape[1], 1))
                 boxes, classes = self.label_encoder.encode(boxes, classes)
+                has_boxes = True
             else:
                 boxes = torch.zeros((1, 0, 6))
                 classes = torch.zeros((1, 0))
@@ -183,5 +186,9 @@ class PatchesDataset(torch.utils.data.Dataset):
             torch.tensor(img).unsqueeze(0),
             boxes.squeeze(0),
             classes.squeeze(0),
-            {"file": self.idx_to_file[img_idx], "patch": pat_idx},
+            {
+                "file": self.idx_to_file[img_idx],
+                "patch": pat_idx,
+                "has_boxes": has_boxes,
+            },
         )
