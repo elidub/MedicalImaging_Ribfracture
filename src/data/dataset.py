@@ -26,7 +26,7 @@ class CustomImageDataset(torch.utils.data.Dataset):
         self, split="val", dir="../data_dev", transform=None, target_transform=None
     ):
         self.split = split
-        self.split_dir = os.path.join(dir, split)
+        self.split_dir = os.path.join(dir, 'raw', split)
 
         self.transform = transform
         self.target_transform = target_transform
