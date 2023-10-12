@@ -2,6 +2,7 @@ import os
 
 import argparse
 import csv
+import pandas as pd
 import nibabel as nib
 import numpy as np
 from scipy import ndimage
@@ -11,7 +12,27 @@ from tqdm import tqdm
 
 from data.dataset import read_image
 from data.seg2box import stich_boxes_to_patch
-from data.patcher import reconstruct_volume
+from data.patcher import patch_volume, reconstruct_volume
+
+
+def read_metadata(path):
+    '''
+        Reads metadata from csv file and returns the bounding boxes for each image.
+        Metadata is structured as patch_id, box_id, x, y, z, width, height, depth.
+        Bounding boxes are returned as a dictionary of lists of lists with keys as patch_id and outer list as box_id.
+        Inner list contains x, y, z, width, height, depth.
+    '''
+
+    bounding_boxes = {}
+    with open(path, mode='r') as file:
+        csv_reader = csv.reader(file)
+        for i, row in enumerate(csv_reader):
+            if i > 0:
+                if row[0] not in bounding_boxes.keys():
+                    bounding_boxes[row[0]] = [row[2:]]
+                else:
+                    bounding_boxes[row[0]].append(row[2:])
+    return bounding_boxes
 
 
 def _remove_low_probs(pred, prob_thresh):
@@ -101,7 +122,11 @@ def parse_option(notebook=False):
         default='../data',
         help='Path to original image data directory'
         )
-    parser.add_argument('--save_dir', type=str, default='../logs/unet3d/version1/submissions', help='Path to data directory')
+    parser.add_argument(
+        '--save_dir',
+        type=str,
+        default='../logs/unet3d/version_1/submissions',
+        help='Path to data directory')
     parser.add_argument('--patch_size', type=int, nargs=3, default=[128, 128, 128], help='Patch size')
 
     args = parser.parse_args() if not notebook else parser.parse_args(args=[])
@@ -113,26 +138,36 @@ def main(args):
     pred_info_list = []
 
     for img_id in tqdm(os.listdir(os.path.join(args.prediction_box_dir, args.split))):
+
         original_image, _ = read_image(
             os.path.join(args.original_image_dir, 'raw', args.split, 'images', f'{img_id}-image.nii.gz')
             )
-        with open(os.path.join(args.prediction_box_dir, args.split, img_id, 'metadata.csv'), mode='r') as file:
-            csv_reader = csv.reader(file)
-            bounding_boxes = {rows[0]: rows[1] for rows in csv_reader}
-        print(bounding_boxes)
+        bounding_boxes = read_metadata(
+            os.path.join(args.prediction_box_dir, args.split, img_id, 'metadata.csv')
+            )
+        patches = patch_volume(np.zeros_like(original_image), args.patch_size, pad_value=0)
+        
         for key in bounding_boxes.keys():
             predictions = []
+
             for i, box in enumerate(os.listdir(os.path.join(args.prediction_box_dir, args.split, img_id, f'patch{key}'))):
-                prediction = np.load(os.path.join(args.box_dir, args.split, img_id, f'patch{key}', box))
-                prediction = prediction[:bounding_boxes[key][i][3], :bounding_boxes[key][i][4], :bounding_boxes[key][i][5]]
+                prediction = np.load(os.path.join(args.prediction_box_dir, args.split, img_id, f'patch{key}', box))
+                prediction = prediction[list(prediction.keys())[0]]
+                w, h, d = int(bounding_boxes[key][i][3]), int(bounding_boxes[key][i][4]), int(bounding_boxes[key][i][5])
+                prediction = prediction[:min(w, prediction.shape[0]), :min(h, prediction.shape[1]), :min(d, prediction.shape[2])]
                 predictions.append(prediction)
+
             patched = stich_boxes_to_patch(bounding_boxes[key], predictions, args.patch_size)
-        pred_arr = reconstruct_volume(patched, original_image.shape)
+            # TODO: think about overlapping boxes (currently overwriting with last prediction, could be average)
+            patches[int(key)] = patched
+
+        pred_arr = reconstruct_volume(patches, original_image.shape)
         pred_arr = _post_process(pred_arr, original_image, prob_thresh=0.5, bone_thresh=200, size_thresh=1000)
 
         pred_image, pred_info = _make_submission_files(pred_arr, img_id, np.eye(4)) # TODO: check/add affine (np.eye(4))
         pred_info_list.append(pred_info)
         pred_path = os.path.join(args.save_dir, f"{img_id}_pred.nii.gz")
+        os.makedirs(os.path.dirname(pred_path), exist_ok=True)
         nib.save(pred_image, pred_path)
 
 

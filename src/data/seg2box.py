@@ -88,6 +88,7 @@ def stich_boxes_to_patch(bounding_boxes, predictions, patch_shape):
     # Stitch the predictions back to the original image level
     for box, prediction in zip(bounding_boxes, predictions):
         x, y, z, width, height, depth = box
+        x, y, z, width, height, depth = int(x), int(y), int(z), int(width), int(height), int(depth)
         patch_predictions[x:x+width, y:y+height, z:z+depth] = prediction
 
     return patch_predictions
