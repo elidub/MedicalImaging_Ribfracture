@@ -174,12 +174,8 @@ def main(args):
                     batch_segs, _ = batch
                     for seg in batch_segs:
                         path = npz_files.pop(0)
-                        print(path)
-                        print(seg.shape)
-                        np.savez_compressed(path, seg)
                         seg = np.load(path)
                         seg = seg[list(seg.keys())[0]]
-                        print(seg.shape)
 
             elif args.net == "retinanet":
                 data_dir = os.path.join(pred_dir, "boxes", split)

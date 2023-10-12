@@ -11,6 +11,7 @@ from PIL import Image
 sys.path.insert(1, sys.path[0] + "/..")
 from src.data.utils import pad_tensor
 from src.model.modules import BoxLabelEncoder
+from src.data.utils import simplify_labels
 
 
 def read_image(file_path):
@@ -54,7 +55,7 @@ class CustomImageDataset(torch.utils.data.Dataset):
         if self.target_transform:
             label = self.target_transform(label)
 
-        return image, label
+        return image, simplify_labels(label)
 
 
 class BoxesDataset(torch.utils.data.Dataset):
@@ -116,7 +117,7 @@ class BoxesDataset(torch.utils.data.Dataset):
 
         y = pad_tensor(y, pad_value=self.pad_value, pad_size=self.pad_size)
 
-        return x, y
+        return x, simplify_labels(y)
 
 
 class PatchesDataset(torch.utils.data.Dataset):
