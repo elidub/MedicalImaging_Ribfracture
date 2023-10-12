@@ -168,12 +168,18 @@ def main(args):
 
                 # Save predictions to npz files
                 npz_files = find_npz_files(
-                    os.path.join(args.data_dir, "boxes", split, "images")
+                    os.path.join(data_dir)
                 )
                 for batch in preds:
                     batch_segs, _ = batch
                     for seg in batch_segs:
-                        np.savez_compressed(npz_files.pop(0), seg)
+                        path = npz_files.pop(0)
+                        print(path)
+                        print(seg.shape)
+                        np.savez_compressed(path, seg)
+                        seg = np.load(path)
+                        seg = seg[list(seg.keys())[0]]
+                        print(seg.shape)
 
             elif args.net == "retinanet":
                 data_dir = os.path.join(pred_dir, "boxes", split)
