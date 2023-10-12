@@ -97,6 +97,7 @@ class BoxesDataset(torch.utils.data.Dataset):
         box = self.boxes[idx]
 
         x = np.load(os.path.join(self.x_path, box))
+        x = x[list(x.keys())[0]]
         x = torch.from_numpy(x)
 
         if self.transform:
@@ -107,6 +108,7 @@ class BoxesDataset(torch.utils.data.Dataset):
             return x, torch.tensor([-1])  # return -1 as dummy label for test set
 
         y = np.load(os.path.join(self.y_path, box))
+        y = y[list(y.keys())[0]]
         y = torch.from_numpy(y)
 
         if self.target_transform:
@@ -134,11 +136,12 @@ class PatchesDataset(torch.utils.data.Dataset):
 
         for file in os.listdir(self.img_dir):
             im_data = np.load(os.path.join(self.img_dir, file))
+            im_data = im_data[list(im_data.keys())[0]]
             num_patches = im_data.shape[0]
 
             self.idx_to_im.append(sum(self.patches_per_im))
             self.patches_per_im.append(num_patches)
-            self.idx_to_file.append(file.replace(".npy", ""))
+            self.idx_to_file.append(file.replace(".npz", ""))
 
         self.idx_to_im = torch.tensor(self.idx_to_im)
         self.label_encoder = BoxLabelEncoder(
@@ -155,9 +158,9 @@ class PatchesDataset(torch.utils.data.Dataset):
         img_idx = torch.argmin(lookup.abs()).item()
         pat_idx = idx - self.idx_to_im[img_idx].item()
 
-        img = np.load(os.path.join(self.img_dir, f"{self.idx_to_file[img_idx]}.npy"))[
-            pat_idx
-        ]
+        img = np.load(os.path.join(self.img_dir, f"{self.idx_to_file[img_idx]}.npz"))
+        img = img[list(img.keys())[0]]
+        img = img[pat_idx]
 
         boxes = torch.zeros((1, 0, 6))
         classes = torch.zeros((1, 0))
