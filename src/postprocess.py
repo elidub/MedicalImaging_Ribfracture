@@ -154,6 +154,8 @@ def main(args):
                 prediction = np.load(os.path.join(args.prediction_box_dir, args.split, img_id, f'patch{key}', box))
                 prediction = prediction[list(prediction.keys())[0]]
                 w, h, d = int(bounding_boxes[key][i][3]), int(bounding_boxes[key][i][4]), int(bounding_boxes[key][i][5])
+                print(w, h, d)
+                print(prediction.shape)
                 prediction = prediction[:min(w, prediction.shape[0]), :min(h, prediction.shape[1]), :min(d, prediction.shape[2])]
                 predictions.append(prediction)
 
@@ -162,8 +164,8 @@ def main(args):
             patches[int(key)] = patched
 
         pred_arr = reconstruct_volume(patches, original_image.shape)
-        pred_arr = _post_process(pred_arr, original_image, prob_thresh=0.5, bone_thresh=200, size_thresh=1000)
 
+        pred_arr = _post_process(pred_arr, original_image, prob_thresh=0.5, bone_thresh=200, size_thresh=1000) # TODO: good values?
         pred_image, pred_info = _make_submission_files(pred_arr, img_id, np.eye(4)) # TODO: check/add affine (np.eye(4))
         pred_info_list.append(pred_info)
         pred_path = os.path.join(args.save_dir, f"{img_id}_pred.nii.gz")
