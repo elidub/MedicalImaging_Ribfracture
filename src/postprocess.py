@@ -125,7 +125,7 @@ def parse_option(notebook=False):
     parser.add_argument(
         '--save_dir',
         type=str,
-        default='../logs/unet3d/version_1/submissions',
+        default='../logs/submissions/version_1',
         help='Path to data directory')
     parser.add_argument('--patch_size', type=int, nargs=3, default=[128, 128, 128], help='Patch size')
 
@@ -154,8 +154,6 @@ def main(args):
                 prediction = np.load(os.path.join(args.prediction_box_dir, args.split, img_id, f'patch{key}', box))
                 prediction = prediction[list(prediction.keys())[0]]
                 w, h, d = int(bounding_boxes[key][i][3]), int(bounding_boxes[key][i][4]), int(bounding_boxes[key][i][5])
-                print(w, h, d)
-                print(prediction.shape)
                 prediction = prediction[:min(w, prediction.shape[0]), :min(h, prediction.shape[1]), :min(d, prediction.shape[2])]
                 predictions.append(prediction)
 
