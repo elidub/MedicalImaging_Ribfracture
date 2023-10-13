@@ -39,7 +39,7 @@ def reconstruct_volume(patches, original_shape, pad_value=0):
     num_patches, px, py, pz = patches.shape
     x, y, z = original_shape
     z = z if z % pz == 0 else z + pz - z % pz  # pad z dimension to be divisible by patch size
-    reconstructed_volume = np.full((x, y, z), fill_value=pad_value)
+    reconstructed_volume = np.full((x, y, z), fill_value=pad_value).astype(np.float32)
 
     assert x % px == 0, "volume width must be divisible by patch size"
     assert y % py == 0, "volume height must be divisible by patch size"

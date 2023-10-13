@@ -128,6 +128,9 @@ def parse_option(notebook=False):
         default='../logs/submissions/version_1',
         help='Path to data directory')
     parser.add_argument('--patch_size', type=int, nargs=3, default=[128, 128, 128], help='Patch size')
+    parser.add_argument('--prob_thresh', type=float, default=0.5, help='Probability threshold')
+    parser.add_argument('--bone_thresh', type=float, default=200, help='Bone threshold')
+    parser.add_argument('--size_thresh', type=int, default=1000, help='Size threshold')
 
     args = parser.parse_args() if not notebook else parser.parse_args(args=[])
     return args
@@ -163,7 +166,7 @@ def main(args):
 
         pred_arr = reconstruct_volume(patches, original_image.shape)
 
-        pred_arr = _post_process(pred_arr, original_image, prob_thresh=0.5, bone_thresh=200, size_thresh=1000) # TODO: good values?
+        pred_arr = _post_process(pred_arr, original_image, args.prob_thresh, args.bone_thresh, args.size_thresh)
         pred_image, pred_info = _make_submission_files(pred_arr, img_id, np.eye(4)) # TODO: check/add affine (np.eye(4))
         pred_info_list.append(pred_info)
         pred_path = os.path.join(args.save_dir, f"{img_id}_pred.nii.gz")
