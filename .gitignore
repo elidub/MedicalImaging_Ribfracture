@@ -137,6 +137,6 @@ logs/test
 .DS_Store
 /data/
 data_boxes/
-src/misc/post.py
+src/misc/post_old.py
 jobs/slurm/
 logs/
