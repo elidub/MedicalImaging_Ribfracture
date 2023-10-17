@@ -1,5 +1,6 @@
 import os
 import torch.nn as nn
+import torch
 
 from src.model.modules import RetinaNetLoss
 from src.model.learner import Learner, RetinanetLearner
@@ -29,7 +30,8 @@ def setup_model(args):
         ckpt_path = os.path.join(args.log_dir, args.net, args.version, "checkpoints")
         ckpt = os.listdir(ckpt_path)[0]
         model = learner.load_from_checkpoint(
-            os.path.join(ckpt_path, ckpt), net=net, loss=loss
+            os.path.join(ckpt_path, ckpt), net=net, loss=loss,
+            map_location=torch.device('cpu')
         )
         model = model.eval()
 

@@ -1,5 +1,4 @@
-import os
-
+import os, sys
 import argparse
 import csv
 import pandas as pd
@@ -10,9 +9,10 @@ from skimage.measure import label, regionprops
 from skimage.morphology import disk, remove_small_objects
 from tqdm import tqdm
 
-from data.dataset import read_image
-from data.seg2box import stich_boxes_to_patch
-from data.patcher import patch_volume, reconstruct_volume
+sys.path.insert(1, sys.path[0] + "/..")
+from src.data.dataset import read_image
+from src.data.seg2box import stich_boxes_to_patch
+from src.data.patcher import patch_volume, reconstruct_volume
 
 
 def read_metadata(path):
@@ -141,7 +141,7 @@ def main(args):
     pred_info_list = []
 
     for img_id in tqdm(os.listdir(os.path.join(args.prediction_box_dir, args.split))):
-
+        
         original_image, _ = read_image(
             os.path.join(args.original_image_dir, 'raw', args.split, 'images', f'{img_id}-image.nii.gz')
             )
@@ -165,6 +165,8 @@ def main(args):
             patches[int(key)] = patched
 
         pred_arr = reconstruct_volume(patches, original_image.shape)
+
+        # return pred_arr
 
         pred_arr = _post_process(pred_arr, original_image, args.prob_thresh, args.bone_thresh, args.size_thresh)
         pred_image, pred_info = _make_submission_files(pred_arr, img_id, np.eye(4)) # TODO: check/add affine (np.eye(4))
