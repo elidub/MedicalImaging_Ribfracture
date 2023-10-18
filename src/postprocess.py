@@ -1,5 +1,4 @@
-import os
-
+import os, sys
 import argparse
 import csv
 import pandas as pd
@@ -9,10 +8,12 @@ from scipy import ndimage
 from skimage.measure import label, regionprops
 from skimage.morphology import disk, remove_small_objects
 from tqdm import tqdm
+import pickle
 
-from data.dataset import read_image
-from data.seg2box import stich_boxes_to_patch
-from data.patcher import patch_volume, reconstruct_volume
+sys.path.insert(1, sys.path[0] + "/..")
+from src.misc.files import read_image
+from src.data.seg2box import stich_boxes_to_patch
+from src.data.patcher import patch_volume, reconstruct_volume
 
 
 def read_metadata(path):
@@ -128,9 +129,9 @@ def parse_option(notebook=False):
         default='../logs/submissions/version_1',
         help='Path to data directory')
     parser.add_argument('--patch_size', type=int, nargs=3, default=[128, 128, 128], help='Patch size')
-    parser.add_argument('--prob_thresh', type=float, default=0.5, help='Probability threshold')
-    parser.add_argument('--bone_thresh', type=float, default=200, help='Bone threshold')
-    parser.add_argument('--size_thresh', type=int, default=1000, help='Size threshold')
+    parser.add_argument('--prob_thresh', type=float, default=0.0, help='Probability threshold')
+    parser.add_argument('--bone_thresh', type=float, default=0, help='Bone threshold')
+    parser.add_argument('--size_thresh', type=int, default=200, help='Size threshold')
 
     args = parser.parse_args() if not notebook else parser.parse_args(args=[])
     return args
@@ -141,7 +142,7 @@ def main(args):
     pred_info_list = []
 
     for img_id in tqdm(os.listdir(os.path.join(args.prediction_box_dir, args.split))):
-
+        
         original_image, _ = read_image(
             os.path.join(args.original_image_dir, 'raw', args.split, 'images', f'{img_id}-image.nii.gz')
             )
@@ -166,12 +167,21 @@ def main(args):
 
         pred_arr = reconstruct_volume(patches, original_image.shape)
 
+        ## keep this here, its for the gridsearch
+        # os.makedirs(args.save_dir, exist_ok=True)
+        # np.save(os.path.join(args.save_dir, f"{img_id}_pred.npy"), pred_arr)
+        # continue
+
         pred_arr = _post_process(pred_arr, original_image, args.prob_thresh, args.bone_thresh, args.size_thresh)
         pred_image, pred_info = _make_submission_files(pred_arr, img_id, np.eye(4)) # TODO: check/add affine (np.eye(4))
         pred_info_list.append(pred_info)
-        pred_path = os.path.join(args.save_dir, f"{img_id}_pred.nii.gz")
+        pred_path = os.path.join(args.save_dir, f"{img_id}.nii.gz")
         os.makedirs(os.path.dirname(pred_path), exist_ok=True)
         nib.save(pred_image, pred_path)
+
+    ### concatenate pred_info_list and save
+    pred_info_list = pd.concat(pred_info_list)
+    pred_info_list.to_csv(os.path.join(args.save_dir, f'ribfrac-{args.split}-pred.csv'), index = False)
 
 
 if __name__ == '__main__':

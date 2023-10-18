@@ -29,7 +29,7 @@ class Learner(pl.LightningModule):
         loss = self.loss(y_hat, y)
 
         # Metrics
-        acc = ((y_hat > 0.5) == y).float().mean()
+        acc = ((y_hat.flatten()[y.flatten() != -1] > 0.5) == y.flatten()[y.flatten() != -1]).float().mean()
         # better metrics to come ...
 
         # Log

@@ -9,10 +9,13 @@
 #SBATCH --mem=32000M
 #SBATCH --output=jobs/slurm/preprocess_and_train_unet_%A.out
 
-cd ~/AIMedicalImaging/src
+# cd ~/AIMedicalImaging/src
+cd src
 
-python preprocess.py --split val
-python preprocess.py --split train
-# python preprocess.py --split test
+# python preprocess.py --split val   --data_dir ../data_dev
+# python preprocess.py --split train --data_dir ../data_dev 
+# python preprocess.py --split test  --data_dir ../data_dev 
 
-python run.py --train --net unet3d --data_dir ../data --dataset boxes --splits train val 
+python run.py --train --net unet3d --data_dir ../data_dev --dataset boxes --splits train val 
+
+python run.py --train --net retinanet --data_dir ../data_dev --dataset patches
