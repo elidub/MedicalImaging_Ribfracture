@@ -16,10 +16,10 @@ python preprocess.py --split val   --data_dir ../data_dev
 python preprocess.py --split train --data_dir ../data_dev 
 python preprocess.py --split test  --data_dir ../data_dev 
 
-python run.py --train   --net retinanet --data_dir ../data_dev --dataset patches --num_workers 8 --version run_all
-python run.py --predict --net retinanet --data_dir ../data_dev --dataset patches --num_workers 8 --version run_all
+# python run.py --train   --net retinanet --data_dir ../data_dev --dataset patches --num_workers 8 --version run_all
+# python run.py --predict --net retinanet --data_dir ../data_dev --dataset patches --num_workers 8 --version run_all
 
-# python run.py --train   --net unet3d --data_dir ../data_dev --dataset boxes --num_workers 8
-python run.py --train   --max_epochs 10 --net unet3d --data_dir ../logs/retinanet/run_all --dataset boxes --num_workers 8 --version run_all --splits train val
-python run.py --predict                 --net unet3d --data_dir ../logs/retinanet/run_all --dataset boxes --num_workers 8 --version run_all --splits test
+# # python run.py --train   --net unet3d --data_dir ../data_dev --dataset boxes --num_workers 8
+# python run.py --train   --max_epochs 10 --net unet3d --data_dir ../logs/retinanet/run_all --dataset boxes --num_workers 8 --version run_all --splits train val
+# python run.py --predict                 --net unet3d --data_dir ../logs/retinanet/run_all --dataset boxes --num_workers 8 --version run_all --splits test
 

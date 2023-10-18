@@ -129,9 +129,9 @@ def parse_option(notebook=False):
         default='../logs/submissions/version_1',
         help='Path to data directory')
     parser.add_argument('--patch_size', type=int, nargs=3, default=[128, 128, 128], help='Patch size')
-    parser.add_argument('--prob_thresh', type=float, default=0.5, help='Probability threshold')
-    parser.add_argument('--bone_thresh', type=float, default=200, help='Bone threshold')
-    parser.add_argument('--size_thresh', type=int, default=1000, help='Size threshold')
+    parser.add_argument('--prob_thresh', type=float, default=0.0, help='Probability threshold')
+    parser.add_argument('--bone_thresh', type=float, default=0, help='Bone threshold')
+    parser.add_argument('--size_thresh', type=int, default=200, help='Size threshold')
 
     args = parser.parse_args() if not notebook else parser.parse_args(args=[])
     return args
@@ -167,6 +167,7 @@ def main(args):
 
         pred_arr = reconstruct_volume(patches, original_image.shape)
 
+        ## keep this here, its for the gridsearch
         # os.makedirs(args.save_dir, exist_ok=True)
         # np.save(os.path.join(args.save_dir, f"{img_id}_pred.npy"), pred_arr)
         # continue
@@ -177,8 +178,8 @@ def main(args):
         pred_path = os.path.join(args.save_dir, f"{img_id}.nii.gz")
         os.makedirs(os.path.dirname(pred_path), exist_ok=True)
         nib.save(pred_image, pred_path)
-    
-    # concatenate pred_info_list and save
+
+    ### concatenate pred_info_list and save
     pred_info_list = pd.concat(pred_info_list)
     pred_info_list.to_csv(os.path.join(args.save_dir, f'ribfrac-{args.split}-pred.csv'), index = False)
 

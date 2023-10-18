@@ -36,39 +36,47 @@ def gridsearch():
     # Predict
     args.train, args.predict = False, True
     args.splits = ['val']
-    main(args)
+    # main(args)
 
-    # Post process
+    # # Post process
     postprocess_args = postprocess_parse_option(notebook=True)
     postprocess_args.split = args.splits[0]
     postprocess_args.prediction_box_dir = os.path.join(args.log_dir, args.net, args.version, 'segmentations')
     postprocess_args.original_image_dir = args.data_dir
     postprocess_args.save_dir = os.path.join(args.log_dir, 'submissions', args.version, postprocess_args.split)
 
-    postprocess_main(postprocess_args)
+    # postprocess_main(postprocess_args)
 
 
     # Setup grid search
 
-    l = 2
+    # l1, l2 = 4, 20
+    # n1, n2 = 4, 2
+    # ranges = {
+    #     'prob_thresh' : np.append(np.array([0]), np.logspace(-3, -1, l1-1, endpoint = True)),
+    #     'bone_thresh' : np.array([200]),
+    #     'size_thresh' : np.linspace(0, 20000, l2, endpoint = True)
+    # }
+
+    l1, l2 = 10, 10
+    n1, n2 = 4, 2
     ranges = {
-        'prob_thresh' : np.linspace(0, 1, l, endpoint = True),
+        'prob_thresh' : np.append(np.array([0]), np.logspace(-3, 0, l1-1, endpoint = True)),
         'bone_thresh' : np.array([200]),
-        'size_thresh' : np.linspace(0, 2000, l, endpoint = True)
+        'size_thresh' : np.linspace(0, 5000, l2, endpoint = True)
     }
 
     combis = []
     for i, x in enumerate(ranges['prob_thresh']):
             for k, z in enumerate(ranges['size_thresh']):
-                if i <= k:
-                    k = l-k-1
+                if (i + k) < (l1 - n1 + l2 - n2):
+                # if i <= k:
+                    # k = l2-k-1
                     combis.append(np.array((ranges['prob_thresh'][i], ranges['bone_thresh'][0], ranges['size_thresh'][k])))
     combis = np.array(combis)
 
 
     # Evaluate
-
-
     img_ids = os.listdir(os.path.join(postprocess_args.prediction_box_dir, postprocess_args.split))
     gs = pd.DataFrame(columns = ranges.keys(), data = combis)
 
@@ -77,13 +85,14 @@ def gridsearch():
 
     y_pred_nonzero = np.array([])
 
+    img_ids = img_ids[:1]
+
     for img_id in img_ids:
         x, _ = read_image(os.path.join(postprocess_args.original_image_dir, 'raw', postprocess_args.split, 'images', f'{img_id}-image.nii.gz'))
         y_pred = np.load(os.path.join(postprocess_args.save_dir, f'{img_id}_pred.npy'))
         y_true, _ = read_image(os.path.join(postprocess_args.original_image_dir, 'raw', postprocess_args.split, 'labels', f'{img_id}-label.nii.gz'))
         y_true = torch.tensor(simplify_labels(y_true), device = device, dtype = torch.int)
 
-        # y_pred_nonzero.append(y_pred[y_pred != 0])
         y_pred_nonzero = np.append(y_pred_nonzero, y_pred[y_pred != 0])
         
         for i, combi in tqdm(gs.iterrows(), total=len(gs)):
@@ -93,12 +102,12 @@ def gridsearch():
             y_pred_post = torch.tensor(simplify_labels(y_pred_post), device = device, dtype = torch.int)
             
             metric = calculate_metrics(y_true, y_pred_post)
-            
+
             for k, v in metric.items():
                 gs.loc[i, k].append(v)
 
-        gs.to_csv('../store/grid_search.csv')
-        np.save('../store/y_pred_nonzero.npy', y_pred_nonzero)
+        gs.to_csv('../store/grid_search.csv', index=False)
+        # np.save('../store/y_pred_nonzero.npy', y_pred_nonzero)
 
     gs['accuracy_mean'] = gs['accuracy'].apply(lambda x: np.mean(x))
     gs['precision_mean'] = gs['precision'].apply(lambda x: np.mean(x))
