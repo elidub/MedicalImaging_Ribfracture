@@ -6,6 +6,19 @@ from src.model.modules import RetinaNetLoss
 from src.model.learner import Learner, RetinanetLearner
 from src.model.models import DummyNetwork, RetinaNet3D, UNet3D
 
+class BCEWithIgnoreLoss(nn.Module):
+    def __init__(self, ignore_index=-1):
+        super(BCEWithIgnoreLoss, self).__init__()
+        self.ignore_index = ignore_index
+
+    def forward(self, input, target):
+        # Ignore values marked with self.ignore_index
+        valid_mask = target != self.ignore_index
+        
+        # Calculate the BCE loss for the valid values
+        loss = nn.BCELoss()(input[valid_mask], target[valid_mask].float())
+        
+        return loss
 
 def setup_model(args):
     net = args.net
@@ -19,7 +32,7 @@ def setup_model(args):
         learner = RetinanetLearner
     elif net == "unet3d":
         net = UNet3D(1, 1)
-        loss = nn.BCELoss()
+        loss = BCEWithIgnoreLoss()
         learner = Learner
     else:
         raise ValueError("Invalid network type")
