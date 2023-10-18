@@ -54,15 +54,16 @@ class ConvUpBlock(nn.Module):
     def __init__(self, in_channels, out_channels):
         super().__init__()
 
-        self.deconv = nn.ConvTranspose3d(
-            in_channels=in_channels,
-            out_channels=out_channels,
-            kernel_size=(2, 2, 2),
-            stride=2,
-        )
+        # self.deconv = nn.ConvTranspose3d(
+        #     in_channels=in_channels,
+        #     out_channels=out_channels,
+        #     kernel_size=(2, 2, 2),
+        #     stride=2,
+        # )
+        self.upsample = nn.Upsample(scale_factor=2, mode="nearest")
 
         self.conv1 = nn.Conv3d(
-            in_channels=out_channels,
+            in_channels=in_channels,
             out_channels=out_channels,
             kernel_size=(3, 3, 3),
             padding=(1, 1, 1),
@@ -79,7 +80,8 @@ class ConvUpBlock(nn.Module):
         self.norm2 = nn.BatchNorm3d(num_features=out_channels)
 
     def forward(self, x):
-        y = self.deconv(x)
+        # y = self.deconv(x)
+        y = self.upsample(x)
         y = self.norm1(self.conv1(y)).relu()
         return self.norm2(self.conv2(y).relu())
 

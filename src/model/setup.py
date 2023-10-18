@@ -16,7 +16,8 @@ class BCEWithIgnoreLoss(nn.Module):
         valid_mask = target != self.ignore_index
         
         # Calculate the BCE loss for the valid values
-        loss = nn.BCELoss()(input[valid_mask], target[valid_mask].float())
+        # loss = nn.BCELoss()(input[valid_mask], target[valid_mask].float())
+        loss = nn.functional.binary_cross_entropy(input[valid_mask], target[valid_mask].float())
         
         return loss
 
