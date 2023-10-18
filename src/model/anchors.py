@@ -43,8 +43,12 @@ class Anchors3D(nn.Module):
         self.scales = [2**e for e in [0, 1 / 3, 2 / 3]]
 
         self._num_anchors = len(self.ratios) * len(self.scales)
-        self._strides = [2**i for i in range(2, 7)]
-        self._volumes = [e**3 for e in [32.0, 64.0, 128.0, 256.0, 512.0]]
+        # self._strides = [2**i for i in range(2, 7)]
+        self._strides = [2**i for i in range(2, 5)]
+        # self._volumes = [e**3 for e in [32.0, 64.0, 128.0, 256.0, 512.0]]
+        # self._volumes = [e**3 for e in [4.0, 8.0, 16.0, 32.0, 64.0]]
+        # self._volumes = [e**3 for e in [8.0, 16.0, 32.0]]
+        self._volumes = [e**3 for e in [16.0, 32.0, 64.0]]
         self._anchor_dims = self._compute_dims()
 
     def _compute_dims(self):
@@ -126,15 +130,18 @@ class Anchors3D(nn.Module):
                 math.ceil(image_depth / 2**i),
                 i,
             )
-            for i in range(2, 7)
+            for i in range(2, 5)
         ]
+
+        print(torch.cat(anchors).shape)
 
         return bbox_centerwhd_to_xyzwhd(torch.cat(anchors, axis=0))
 
 
-# def match_anchor_boxes(anchor_boxes, gt_boxes, match_iou=0.5, ignore_iou=0.4):
-def match_anchor_boxes(anchor_boxes, gt_boxes, match_iou=0.01, ignore_iou=0.005):
-# def match_anchor_boxes(anchor_boxes, gt_boxes, match_iou=0.02, ignore_iou=0.01):
+def match_anchor_boxes(anchor_boxes, gt_boxes, match_iou=0.4, ignore_iou=0.3):
+    # def match_anchor_boxes(anchor_boxes, gt_boxes, match_iou=0.01, ignore_iou=0.005):
+    # def match_anchor_boxes(anchor_boxes, gt_boxes, match_iou=0.02, ignore_iou=0.01):
+    # def match_anchor_boxes(anchor_boxes, gt_boxes, match_iou=0.1, ignore_iou=0.09):
     iou_matrix = pairwise_iou(anchor_boxes, gt_boxes)
 
     max_iou, matched_gt_idx = torch.max(iou_matrix, dim=1, keepdim=False)

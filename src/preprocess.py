@@ -29,8 +29,10 @@ def save_boxes(img_boxes, label_boxes, img_id, box_dir):
                 
 
 def save_metadata(bounding_boxes_in_patch, img_id, box_dir, split):
+    if not os.path.exists(os.path.join(box_dir, split, 'images', img_id)):
+        os.makedirs(os.path.join(box_dir, split, 'images', img_id), exist_ok=True)
 
-    with open(os.path.join(box_dir, split, 'images', img_id, 'metadata.csv'), 'w') as f:
+    with open(os.path.join(box_dir, split, 'images', img_id, 'metadata.csv'), 'w+') as f:
         writer = csv.writer(f)
         writer.writerow(['patch_id', 'box_id', 'x', 'y', 'z', 'width', 'height', 'depth'])
         for patch_id in bounding_boxes_in_patch.keys():

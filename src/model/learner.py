@@ -71,9 +71,7 @@ class RetinanetLearner(pl.LightningModule):
         return y_box_hat, y_cls_hat, y_box, y_cls, info
 
     def step(self, batch, mode="train"):
-        indices = [i for i in range(len(batch[-1])) if batch[-1][i]["has_boxes"]]
-
-        if len(indices) == 0:
+        if mode == "train" and not (batch[1] > 1).any():
             return None, None, None
 
         # Forward pass

@@ -104,14 +104,14 @@ class UNet3D(nn.Module):
 
     def forward(self, x):
         x = x.unsqueeze(1)
-        y = self.down_block1(x)
-        y = self.down_block2(y)
-        y = self.down_block3(y)
-        y = self.down_block4(y)
+        d1 = self.down_block1(x)
+        d2 = self.down_block2(d1)
+        d3 = self.down_block3(d2)
+        d4 = self.down_block4(d3)
 
-        y = self.up_block4(y)
-        y = self.up_block3(y)
-        y = self.up_block2(y)
+        y = self.up_block4(d4) + d3
+        y = self.up_block3(y) + d2
+        y = self.up_block2(y) + d1
         y = self.up_block1(y)
         y = y.squeeze(1)
         return torch.sigmoid(y)
@@ -339,7 +339,7 @@ class RetinaNet3D(nn.Module):
 
     def forward(self, x):
         c3, c4, c5 = self.backbone(x)
-        features = self.fpn(c3, c4, c5)
+        features = self.fpn(c3, c4, c5)[:-2]
         box_y = torch.cat([self.regressgion_block(f) for f in features], dim=1)
         cls_y = torch.cat([self.classification_block(f) for f in features], dim=1)
         return box_y, cls_y

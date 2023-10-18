@@ -7,6 +7,7 @@ import pandas as pd
 import nibabel as nib
 
 from PIL import Image
+from tqdm import tqdm
 
 sys.path.insert(1, sys.path[0] + "/..")
 from src.data.utils import pad_tensor
@@ -26,7 +27,7 @@ class CustomImageDataset(torch.utils.data.Dataset):
         self, split="val", dir="../data_dev", transform=None, target_transform=None
     ):
         self.split = split
-        self.split_dir = os.path.join(dir, 'raw', split)
+        self.split_dir = os.path.join(dir, "raw", split)
 
         self.transform = transform
         self.target_transform = target_transform
@@ -135,14 +136,27 @@ class PatchesDataset(torch.utils.data.Dataset):
         self.idx_to_file = []
         self.patches_per_im = []
 
-        for file in os.listdir(self.img_dir):
-            im_data = np.load(os.path.join(self.img_dir, file))
-            im_data = im_data[list(im_data.keys())[0]]
-            num_patches = im_data.shape[0]
+        print("Initializing patches dataset...")
 
-            self.idx_to_im.append(sum(self.patches_per_im))
-            self.patches_per_im.append(num_patches)
-            self.idx_to_file.append(file.replace(".npz", ""))
+        if not os.path.exists(f"idx_to_im_{split}.npy"):
+            for file in tqdm(os.listdir(self.img_dir)):
+                if not file.endswith(".npz"):
+                    continue
+
+                im_data = np.load(os.path.join(self.img_dir, file))["arr_0"]
+                num_patches = im_data.shape[0]
+
+                self.idx_to_im.append(sum(self.patches_per_im))
+                self.patches_per_im.append(num_patches)
+                self.idx_to_file.append(file.replace(".npz", ""))
+
+            np.save(f"idx_to_im_{split}.npy", self.idx_to_im)
+            np.save(f"idx_to_file_{split}.npy", self.idx_to_file)
+            np.save(f"patches_per_im_{split}.npy", self.patches_per_im)
+        else:
+            self.idx_to_im = np.load(f"idx_to_im_{split}.npy")
+            self.idx_to_file = np.load(f"idx_to_file_{split}.npy")
+            self.patches_per_im = np.load(f"patches_per_im_{split}.npy")
 
         self.idx_to_im = torch.tensor(self.idx_to_im)
         self.label_encoder = BoxLabelEncoder(
@@ -159,35 +173,46 @@ class PatchesDataset(torch.utils.data.Dataset):
         img_idx = torch.argmin(lookup.abs()).item()
         pat_idx = idx - self.idx_to_im[img_idx].item()
 
-        img = np.load(os.path.join(self.img_dir, f"{self.idx_to_file[img_idx]}.npz"))
-        img = img[list(img.keys())[0]]
-        img = img[pat_idx]
+        file = f"{self.idx_to_file[img_idx]}.npz"
+        img = np.load(os.path.join(self.img_dir, file))["arr_0"][pat_idx]
+        img = torch.tensor(img).unsqueeze(0)
+
+        img = torch.nn.functional.interpolate(img.unsqueeze(0), scale_factor=2).clamp(
+            min=0, max=1
+        )  # Upsample
 
         boxes = torch.zeros((1, 0, 6))
         classes = torch.zeros((1, 0))
         has_boxes = False
 
         if self.split != "test":
-            label_data = pd.read_csv(
+            if os.path.exists(
                 os.path.join(self.lab_dir, self.idx_to_file[img_idx], "metadata.csv")
-            )
+            ):
+                label_data = pd.read_csv(
+                    os.path.join(
+                        self.lab_dir, self.idx_to_file[img_idx], "metadata.csv"
+                    )
+                )
 
-            boxes = label_data[label_data["patch_id"].astype(int) == pat_idx]
+                boxes = label_data[label_data["patch_id"].astype(int) == pat_idx]
 
-            if len(boxes) != 0:
-                boxes = torch.tensor(
-                    boxes[["x", "y", "z", "width", "height", "depth"]].to_numpy()
-                ).unsqueeze(0)
+                if len(boxes) != 0:
+                    boxes = torch.tensor(
+                        boxes[["x", "y", "z", "width", "height", "depth"]].to_numpy()
+                    ).unsqueeze(0)
 
-                classes = torch.ones((1, boxes.shape[1], 1))
-                boxes, classes = self.label_encoder.encode(boxes, classes)
-                has_boxes = True
-            else:
-                boxes = torch.zeros((1, 0, 6))
-                classes = torch.zeros((1, 0))
+                    boxes *= 2  # Usample
+
+                    classes = torch.ones((1, boxes.shape[1], 1))
+                    boxes, classes = self.label_encoder.encode(boxes, classes)
+                    has_boxes = True
+                else:
+                    boxes = torch.zeros((1, 0, 6))
+                    classes = torch.zeros((1, 0))
 
         return (
-            torch.tensor(img).unsqueeze(0),
+            img.squeeze(0),
             boxes.squeeze(0),
             classes.squeeze(0),
             {

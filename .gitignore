@@ -140,3 +140,6 @@ data_boxes/
 src/misc/post_old.py
 jobs/slurm/
 logs/
+data_upsample/
+*idx_to*.npy
+*patches_per*.npy
