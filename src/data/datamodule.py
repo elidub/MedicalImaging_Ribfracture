@@ -45,7 +45,8 @@ class DataModule(pl.LightningDataModule):
     def patches_collate(self, batch):
         x, y_box, y_cls, info = zip(*batch)
 
-        max_len = 561720
+        # max_len = 561720
+        max_len = 560640
 
         y_box = [torch.cat((y, torch.zeros(max_len - len(y), 6))) for y in y_box]
         y_cls = [torch.cat((y, torch.zeros(max_len - len(y)))) for y in y_cls]
