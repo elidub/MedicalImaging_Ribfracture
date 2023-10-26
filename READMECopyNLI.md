@@ -49,28 +49,13 @@ python nli/preprocess.py --download_snli --download_glove --create_vocab
 	- `model/` Contains several model spesific scripts
 - `store/` directory to store intermediate files.
 
-- `data/` default directory where GloVe and SNLI are saved
-	- `examples_snli.json` example sentences that are discussed in `analysis.ipynb`
-- `figs/` default directory where figures and images can be saved
-- `jobs/` scripts to send jobs to LISA
-	- `slurm_output/` SLURM output files of the jobs
-- `logs/` To be downloaded [here](https://drive.google.com/drive/folders/1-R0p5JTidy0euu2LccLlkaTwgoimnV5G?usp=sharing) (2.8 GB folder). Contains pretrained models and related data such as checkpoint files, Tensorboard and calculated accuracies. 
-- `nli/` source code that trains on SNLI, evaluates on SentEval and calculates these results. See the table [below](#nli-structure) for detailed overview.
-- `SentEval/` to be cloned repository from FAIR.
-- `store/` directory to store intermediate files, i.e. the vocabulary.
-- `analysis.ipynb` Notebook that explains problem, shows and discusses results, error and confidence analysis, sentence embedding enhancements. 
-
 ### `src/` structure
-| File                | Description                                                                                                                                                  |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `gridsearch.py`     |  |
-| `postprocess.py`	  |  |
-| `preprocess.py`	  |  |
-| `run.py`			  |  |
-### `nli/` structure
-| File                | Description                                                                                                                                                  |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `data.py`           | Vocabulary, custom PyTorch dataset and datamodule.                                                                                                           |
+| File                | Description                                                         		|
+| ------------------- | ----------------------------------------------------------------------------|
+| `gridsearch.py`     | Script to look for the optimal threshhold whith a given U-net model. 		|
+| `postprocess.py`	  | Script to run postprocessing functions and save predictions					|
+| `preprocess.py`	  | Script to run preprocesing functions and saves the preprocessed data.  		|
+| `run.py`			  | Script to initialize training or prediction of a model						|
 
 
 ## Run instructions
