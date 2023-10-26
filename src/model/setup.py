@@ -4,7 +4,7 @@ import torch
 
 from src.model.modules import RetinaNetLoss
 from src.model.learner import Learner, RetinanetLearner
-from src.model.models import DummyNetwork, RetinaNet3D, UNet3D
+from src.model.models import DummyNetwork, RetinaNet3D, UNet3D, FracNet
 
 class BCEWithIgnoreLoss(nn.Module):
     def __init__(self, ignore_index=-1):
@@ -35,6 +35,10 @@ def setup_model(args):
         net = UNet3D(1, 1)
         loss = BCEWithIgnoreLoss()
         learner = Learner
+    elif net == 'fracnet':
+        net = FracNet(1, 1)
+        loss = BCEWithIgnoreLoss()
+        learner = Learner
     else:
         raise ValueError("Invalid network type")
 
@@ -42,6 +46,7 @@ def setup_model(args):
         model = learner(net, loss)
     elif args.predict:
         ckpt_path = os.path.join(args.log_dir, args.net, args.version, "checkpoints")
+        assert len(os.listdir(ckpt_path)) == 1, "Multiple checkpoints found"
         ckpt = os.listdir(ckpt_path)[0]
         model = learner.load_from_checkpoint(
             os.path.join(ckpt_path, ckpt), net=net, loss=loss,
