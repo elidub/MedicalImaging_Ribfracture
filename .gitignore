@@ -130,7 +130,6 @@ dmypy.json
 .pyre/
 
 # our own stuff
-data_dev/*
 data_dev.zip
 data_dev_patches/*
 logs/test
@@ -143,3 +142,4 @@ logs/
 data_upsample/
 *idx_to*.npy
 *patches_per*.npy
+data_dev/

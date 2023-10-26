@@ -80,7 +80,7 @@ def _post_process(pred, image, prob_thresh, bone_thresh, size_thresh):
     pred = _remove_low_probs(pred, prob_thresh)
 
     # remove spine false positives
-    pred = _remove_spine_fp(pred, image, bone_thresh)
+    # pred = _remove_spine_fp(pred, image, bone_thresh)
 
     # remove small connected regions
     pred = _remove_small_objects(pred, size_thresh)

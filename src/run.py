@@ -32,10 +32,10 @@ def parse_option(notebook=False):
 
     # Model
     parser.add_argument(
-        "--net", type=str, default="unet3d", help="Network architecture"
+        "--net", type=str, default="fracnet", help="Network architecture"
     )
     parser.add_argument(
-        "--data_dir", type=str, default="../data", help="Path to data directory"
+        "--data_dir", type=str, default="../data_dev", help="Path to data directory"
     )
     parser.add_argument("--dataset", type=str, default="boxes", help="Dataset type")
     parser.add_argument(
@@ -48,7 +48,7 @@ def parse_option(notebook=False):
 
     # Training
     parser.add_argument(
-        "--max_epochs", type=int, default=3, help="Max number of training epochs"
+        "--max_epochs", type=int, default=4, help="Max number of training epochs"
     )
     parser.add_argument(
         "--num_workers", type=int, default=0, help="Number of workers for dataloader"
