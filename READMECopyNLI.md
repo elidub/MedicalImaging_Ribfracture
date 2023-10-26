@@ -34,6 +34,7 @@ python nli/preprocess.py --download_snli --download_glove --create_vocab
 ```
 
 ## Code structure
+- `figs/` directory to store images.
 - `jobs/` scripts to send jobs to Snellius.
 - `logs/` Contains trained models and related data such as checkpoints.
 - `notebooks/` Contains several experimental notebooks for data exploration, model evaluation and processing.
@@ -43,7 +44,7 @@ python nli/preprocess.py --download_snli --download_glove --create_vocab
 	- `misc/` Contains several miscelanious scripts.
 	- `model/` Contains several model spesific scripts.
 - `store/` directory to store intermediate files.
-- `figs/` directory to store images.
+
 
 ### `src/` structure
 | File                | Description                                                         		|
