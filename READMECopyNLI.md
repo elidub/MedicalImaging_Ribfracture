@@ -1,10 +1,10 @@
 # A Two-Stage Deep Learning Pipeline For Rib Fracture Detection
 
+We introduce a two-stage pipeline for the RibFrac challenge, automating rib fracture detection and segmentation in CT scans. Our method combines a 3D Retinanet for initial detection and a U-net for precise segmentation. We address challenges in training the Retinanet, emphasizing anchor box optimization, class imbalance, and input patching. When we assess both networks within the two-stage framework, we observe that issues encountered during Retinanet training have a detrimental effect on the performance of the U-net. However, when isolating the U-net, we present qualitative results for the U-net, underscoring the potential of our two-step approach. Future work includes addressing optimization challenges and exploring false positive detection networks.
+
 <p float="left" align="middle">
   <img align="middle" src="figs/pipeline.png" height="200" />
 </p>
-
-Our pipeline that we tried to implement is a Detection Network (RetinaNet) to get a bounding box of a rib fracture followed by a Segmentation Network (U-Net). Which will result in segmentation of ribfractures in a CT-scan.
 
 ## Installation instructions
 Install and activate the conda environment.
@@ -37,7 +37,7 @@ python nli/preprocess.py --download_snli --download_glove --create_vocab
 - `jobs/` scripts to send jobs to Snellius.
 - `logs/` Contains trained models and related data such as checkpoints.
 - `notebooks/` Contains several experimental notebooks for data exploration, model evaluation and processing.
-- `ribfrac/` Contains RibFrac challenge evaluation scripts.
+- `ribfrac/` Contains RibFrac challenge evaluation scripts. Found from: [MICCAI 2020 RibFrac Challenge](https://ribfrac.grand-challenge.org/).
 - `src/` Contains code to be used by Snellius.
 	- `data/` Contains several data augmenting scripts.
 	- `misc/` Contains several miscelanious scripts.
