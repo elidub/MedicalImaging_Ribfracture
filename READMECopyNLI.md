@@ -1,12 +1,12 @@
 # A Two-Stage Deep Learning Pipeline For Rib Fracture Detection
 
-This is a reprodicibilty report of [_Supervised Learning of Universal Sentence Representations from Natural Language Inference Data_ by Conneau _et al._ (2017)](https://arxiv.org/abs/1705.02364), where we reproduce and analyze the main findings. Various models are trained on a Natural Language Inference (NLI) task. These trained models function as encoders for sentence embeddings for [_SentEval_ by Conneau and Kiela (2018)](https://arxiv.org/abs/1803.05449), a benchmark transfer task suite. Furthermore, we analyze why certain models perform better than others by looking at the distribution and confidence of the predictions. Finally, we explore how sentence embeddings can be enhanced by multiplying them with trainable parameter.
+This is a .....
 
 <p float="left" align="middle">
   <img align="middle" src="figs/models.png" height="250" /> 
   <img align="middle" src="figs/confs.png" height="250" /> 
   <br>
-  <img align="middle" src="figs/features.png" height="200" />
+  <img align="middle" src="figs/pipeline.png" height="200" />
 </p>
 
 **Top left**. The four models that are implemented for the NLI task. **Top right.** Example of plots that are used to analyze the confidence and why certain models fail. **Bottom.** Each sentence embedding is enhanced by multiplying it with a trainable parameters. The multiplier behavior during training is shown.
@@ -43,11 +43,12 @@ python nli/preprocess.py --download_snli --download_glove --create_vocab
 - `logs/` Contains trained models and related data such as checkpoints.
 - `notebooks/` Contains several experimental notebooks for data exploration, model evaluation and processing.
 - `ribfrac/` Contains RibFrac challenge evaluation scripts.
-- `src/` Contains code to be used by Snellius
-	- `data/` Contains several data augmenting scripts
-	- `misc/` Contains several miscelanious scripts
-	- `model/` Contains several model spesific scripts
+- `src/` Contains code to be used by Snellius.
+	- `data/` Contains several data augmenting scripts.
+	- `misc/` Contains several miscelanious scripts.
+	- `model/` Contains several model spesific scripts.
 - `store/` directory to store intermediate files.
+- `figs/` directory to store images.
 
 ### `src/` structure
 | File                | Description                                                         		|
