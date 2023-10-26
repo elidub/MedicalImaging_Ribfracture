@@ -90,7 +90,10 @@ def main(args):
         max_epochs=args.max_epochs,
         log_every_n_steps=1,
         accelerator="gpu" if torch.cuda.is_available() else "cpu",
-        callbacks=[pl.callbacks.TQDMProgressBar(refresh_rate=1000)],
+        callbacks = [
+            pl.callbacks.TQDMProgressBar(refresh_rate=1000),
+            pl.callbacks.ModelCheckpoint(monitor = 'train_loss', mode = 'min'), 
+        ],
         deterministic=False,  # Set to False for max_pool3d_with_indices_backward_cuda
     )
 
@@ -111,7 +114,7 @@ def main(args):
 
             pred_dir = os.path.join(args.log_dir, args.net, args.version)
 
-            if args.net == "unet3d":
+            if args.net == "unet3d" or args.net == "fracnet":
                 data_dir = os.path.join(pred_dir, "segmentations", split)
                 if os.path.exists(data_dir):
                     shutil.rmtree(data_dir)
