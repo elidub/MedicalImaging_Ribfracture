@@ -1,15 +1,10 @@
 # A Two-Stage Deep Learning Pipeline For Rib Fracture Detection
 
-This is a .....
-
 <p float="left" align="middle">
-  <img align="middle" src="figs/models.png" height="250" /> 
-  <img align="middle" src="figs/confs.png" height="250" /> 
-  <br>
   <img align="middle" src="figs/pipeline.png" height="200" />
 </p>
 
-**Top left**. The four models that are implemented for the NLI task. **Top right.** Example of plots that are used to analyze the confidence and why certain models fail. **Bottom.** Each sentence embedding is enhanced by multiplying it with a trainable parameters. The multiplier behavior during training is shown.
+Our pipeline that we tried to implement is a Detection Network (RetinaNet) to get a bounding box of a rib fracture followed by a Segmentation Network (U-Net). Which will result in segmentation of ribfractures in a CT-scan.
 
 ## Installation instructions
 Install and activate the conda environment.
