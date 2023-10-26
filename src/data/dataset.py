@@ -116,9 +116,10 @@ class BoxesDataset(torch.utils.data.Dataset):
         if self.target_transform:
             y = self.target_transform(y)
 
+        y = simplify_labels(y) 
         y = pad_tensor(y, pad_value=-1, pad_size=self.pad_size)
 
-        return x, simplify_labels(y) 
+        return x, y
 
 
 class PatchesDataset(torch.utils.data.Dataset):
