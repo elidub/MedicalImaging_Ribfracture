@@ -49,46 +49,6 @@ def normalize_standard(volume):
     epsilon = 0.00001
     return (volume - mean) / (std + epsilon)
 
-def normalize_dir(image_dir, args):
-    """
-        Normalize the images in image_dir to be in the range [0, 1]
-
-        Heavy load! Takes a long time to run!
-
-        means = List containing all the means of the images
-        voxels = List containing the number of voxels in images
-        variances = List containing the variances of each image
-    """ 
-    means = []
-    voxels = []
-
-    for file in tqdm(os.listdir(image_dir)):
-        img_id = file.split('-')[0]
-        img_path = f"{args.data_dir}/raw/{args.split}/images/{img_id}-image.nii.gz"
-        img_data, _ = read_image(img_path)
-        means.append(np.mean(img_data, axis=0))
-        voxels.append(np.size(img_data))
-    
-    voxels = np.array(voxels)
-    mean_data = np.sum(np.array(means) * voxels)/np.sum(voxels)
-
-    variances = []
-    for file in tqdm(os.listdir(image_dir)):
-        img_id = file.split('-')[0]
-        img_path = f"{args.data_dir}/raw/{args.split}/images/{img_id}-image.nii.gz"
-        img_data, _ = read_image(img_path)
-        variances.append(np.mean((img_data - mean_data)**2, axis=0))
-
-    variances_weightedmean = np.sum(np.array(variances) * voxels)/np.sum(voxels)
-
-    std = np.sqrt(np.array(variances_weightedmean))
-    epsilon = 0.0000001
-
-    for file in tqdm(os.listdir(image_dir)):
-        img_data = (img_data - mean_data) / (std + epsilon)
-        #Now write it into a nice file that we can store.
-        
-
 def normalize_minmax(volume, min_value, max_value):
     """
         Normalize the volume to be in the range [0, 1]

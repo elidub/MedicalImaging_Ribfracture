@@ -104,4 +104,4 @@ python nli/results.py --model_type <MODEL_TYPE> --feature_type multiplication \
 
 
 ## Contact
-If you have questions or found a bug, send a email to [eliasdubbeldam@gmail.com](mailto:eliasdubbeldam@gmail.com)
+If you have questions or found a bug, send a email to [martijn.dewit@student.uva.nl](mailto:martijn.dewit@student.uva.nl)
