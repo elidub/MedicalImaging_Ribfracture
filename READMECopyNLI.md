@@ -39,14 +39,15 @@ python nli/preprocess.py --download_snli --download_glove --create_vocab
 ```
 
 ## Code structure
-- `jobs/` scripts to send jobs to Snellius
-- `logs/` Contains trained models and related data such as checkpoints 
-- `ribfrac/` 
-- `src/` 
-	- `data/`
-	- `misc/`
-	- `model/`
-
+- `jobs/` scripts to send jobs to Snellius.
+- `logs/` Contains trained models and related data such as checkpoints.
+- `notebooks/` Contains several experimental notebooks for data exploration, model evaluation and processing.
+- `ribfrac/` Contains RibFrac challenge evaluation scripts.
+- `src/` Contains code to be used by Snellius
+	- `data/` Contains several data augmenting scripts
+	- `misc/` Contains several miscelanious scripts
+	- `model/` Contains several model spesific scripts
+- `store/` directory to store intermediate files.
 
 - `data/` default directory where GloVe and SNLI are saved
 	- `examples_snli.json` example sentences that are discussed in `analysis.ipynb`
@@ -59,19 +60,17 @@ python nli/preprocess.py --download_snli --download_glove --create_vocab
 - `store/` directory to store intermediate files, i.e. the vocabulary.
 - `analysis.ipynb` Notebook that explains problem, shows and discusses results, error and confidence analysis, sentence embedding enhancements. 
 
+### `src/` structure
+| File                | Description                                                                                                                                                  |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `gridsearch.py`     |  |
+| `postprocess.py`	  |  |
+| `preprocess.py`	  |  |
+| `run.py`			  |  |
 ### `nli/` structure
 | File                | Description                                                                                                                                                  |
 | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `data.py`           | Vocabulary, custom PyTorch dataset and datamodule.                                                                                                           |
-| `eval.py`           | Script to run transfers tasks of SentEval.                                                                                                                   |
-| `learner.py`        | PyTorch Lightning module that handles training.                                                                                                              |
-| `models.py`         | All four models (AvgWordEmv, UniLSTM, BiLSTM-last, BiLSTM-Max), MLP classifier, sentence embedding concatenation and a network that consolidate all of that. |
-| `plot.py`           | Plot classes used in `analysis.ipynb` that read the results calculated by `results.py`.                                                                      |
-| `preprocess.py`     | Script that downloads and prepossesses SNLI, downloads GloVe and creates vocabulary.                                                                         |
-| `results.py`        | Script that reads data made by `train.py` and `eval.py`, calculates accuracies and stores them.                                                              |
-| `senteval_utils.py` | File to replace `SentEval/senteval/utils.py`, see installation instructions.                                                                                 |
-| `setup.py`          | Utilities to setup and load the vocabulary, model and similar objects.                                                                                       |
-| `train.py`          | Script that trains a given model                                                                                                                             |
 
 
 ## Run instructions
